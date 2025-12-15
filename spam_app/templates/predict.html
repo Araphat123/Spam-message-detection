@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="flex items-center justify-center min-h-[80vh]">
+    <div
+        class="w-full max-w-2xl bg-white dark:bg-gray-800/50 backdrop-blur-md p-8 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700/50 transition-colors duration-200">
+        <div class="text-center mb-8">
+            <h2
+                class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400">
+                Analyze Message
+            </h2>
+            <p class="text-gray-600 dark:text-gray-400 mt-2">Paste your text below to detect if it's Spam or Ham</p>
+        </div>
+
+        <form action="/predict" method="POST" class="space-y-6">
+            <div class="relative group">
+                <div
+                    class="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200">
+                </div>
+                <textarea id="message" name="message" rows="6"
+                    class="relative w-full bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-700 rounded-lg p-4 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition resize-none placeholder-gray-400 dark:placeholder-gray-600 text-lg shadow-inner"
+                    placeholder="e.g., Win a free iPhone now! Click here..." required></textarea>
+            </div>
+
+            <button type="submit"
+                class="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-xl transition transform hover:scale-[1.01] shadow-lg flex items-center justify-center gap-2 text-lg">
+                <span>Run Detection</span>
+                <span class="text-xl">🔍</span>
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

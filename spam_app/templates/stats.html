@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto mt-10">
+    <h2
+        class="text-4xl font-bold mb-10 text-center text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-blue-600 dark:from-green-400 dark:to-blue-500">
+        {{ 'User Statistics (Admin)' if is_admin else 'Detection Statistics' }}
+    </h2>
+
+    {% if is_admin %}
+    <!-- ADMIN VIEW: Table of all users -->
+    <div
+        class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="text-gray-600 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">
+                    <th class="py-3 px-4 font-bold">User Name</th>
+                    <th class="py-3 px-4 font-bold">Email</th>
+                    <th class="py-3 px-4 font-bold text-green-600 dark:text-green-400">Ham</th>
+                    <th class="py-3 px-4 font-bold text-red-600 dark:text-red-400">Spam</th>
+                    <th class="py-3 px-4 font-bold">Total</th>
+                </tr>
+            </thead>
+            <tbody class="text-gray-700 dark:text-gray-300">
+                {% for user in all_users %}
+                <tr
+                    class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition duration-150 border-b border-gray-100 dark:border-gray-700/50 last:border-0">
+                    <td class="py-3 px-4 font-medium">{{ user.name }}</td>
+                    <td class="py-3 px-4 text-sm text-gray-500 dark:text-gray-400">{{ user.email }}</td>
+                    <td class="py-3 px-4 font-semibold text-green-600 dark:text-green-400">{{ user.ham }}</td>
+                    <td class="py-3 px-4 font-semibold text-red-600 dark:text-red-400">{{ user.spam }}</td>
+                    <td class="py-3 px-4 font-bold">{{ user.total }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="py-4 text-center text-gray-500">No users found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% else %}
+    <!-- NORMAL USER VIEW -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Total -->
+        <div
+            class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 transform hover:scale-105 transition duration-300">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-semibold text-gray-600 dark:text-gray-300">Total Scans</h3>
+                <span class="text-3xl">📊</span>
+            </div>
+            <p class="text-5xl font-bold text-gray-900 dark:text-white">{{ stats.total }}</p>
+        </div>
+
+        <!-- Spam -->
+        <div
+            class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-red-200 dark:border-red-900/50 transform hover:scale-105 transition duration-300">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-semibold text-red-500 dark:text-red-400">Spam Detected</h3>
+                <span class="text-3xl">🚨</span>
+            </div>
+            <p class="text-5xl font-bold text-red-600 dark:text-red-500">{{ stats.spam }}</p>
+        </div>
+
+        <!-- Ham -->
+        <div
+            class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-green-200 dark:border-green-900/50 transform hover:scale-105 transition duration-300">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-semibold text-green-500 dark:text-green-400">Ham Verified</h3>
+                <span class="text-3xl">✅</span>
+            </div>
+            <p class="text-5xl font-bold text-green-600 dark:text-green-500">{{ stats.ham }}</p>
+        </div>
+    </div>
+
+    <!-- Chart Section -->
+    <div
+        class="mt-12 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 transition-colors duration-200">
+        <h3 class="text-2xl font-bold mb-6 text-center text-gray-700 dark:text-gray-300">Distribution Analysis</h3>
+        <div class="relative h-96 w-full flex justify-center">
+            <canvas id="statsChart"></canvas>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% if not is_admin %}
+<!-- Only load chart scripts if not admin -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('statsChart').getContext('2d');
+
+    // Parse values safely to avoid JS syntax errors with Jinja2 tags
+    const spamCount = Number('{{ stats.spam }}');
+    const hamCount = Number('{{ stats.ham }}');
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Spam', 'Ham'],
+            datasets: [{
+                data: [spamCount, hamCount],
+                backgroundColor: [
+                    'rgba(239, 68, 68, 0.8)', // Red for Spam
+                    'rgba(34, 197, 94, 0.8)'  // Green for Ham
+                ],
+                borderColor: [
+                    'rgba(239, 68, 68, 1)',
+                    'rgba(34, 197, 94, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        // Simple initial check for dark mode
+                        color: document.documentElement.classList.contains('dark') ? '#cbd5e1' : '#4b5563',
+                        font: {
+                            size: 14
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}

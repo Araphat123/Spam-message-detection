@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="flex items-center justify-center min-h-[80vh]">
+    <div
+        class="w-full max-w-2xl bg-white dark:bg-gray-800/50 backdrop-blur-md p-8 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700/50 text-center relative overflow-hidden transition-colors duration-200">
+
+        <!-- Result Header -->
+        <h2 class="text-4xl font-bold mb-8 text-gray-900 dark:text-white">Analysis Complete</h2>
+
+        <!-- Original Message -->
+        <div class="mb-10 text-left">
+            <p class="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-widest mb-3 ml-1">Analyzed
+                Message</p>
+            <div
+                class="bg-gray-50 dark:bg-gray-900/80 p-6 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 italic leading-relaxed shadow-inner transition-colors duration-200">
+                "{{ message }}"
+            </div>
+        </div>
+
+        <!-- Cards Grid -->
+        <div class="grid grid-cols-2 gap-6 mb-10">
+            <!-- Prediction Card -->
+            <div
+                class="bg-white dark:bg-gray-800 p-6 rounded-xl border {{ 'border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.2)]' if 'Spam' in prediction else 'border-green-500/50 shadow-[0_0_20px_rgba(34,197,94,0.2)]' }} transition transform hover:scale-105">
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-bold uppercase mb-2">Verdict</p>
+                <p class="text-3xl font-extrabold {{ 'text-red-500' if 'Spam' in prediction else 'text-green-500' }}">
+                    {{ prediction }}
+                </p>
+            </div>
+
+            <!-- Confidence Card -->
+            <div
+                class="bg-white dark:bg-gray-800 p-6 rounded-xl border border-blue-500/50 shadow-[0_0_20px_rgba(59,130,246,0.2)] transition transform hover:scale-105">
+                <p class="text-gray-500 dark:text-gray-400 text-sm font-bold uppercase mb-2">Confidence Score</p>
+                <p class="text-3xl font-extrabold text-blue-600 dark:text-blue-400">
+                    {{ confidence }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Action Button -->
+        <a href="/predict"
+            class="inline-flex items-center gap-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-bold py-3 px-8 rounded-full transition transform hover:-translate-y-1 shadow-lg border border-gray-300 dark:border-gray-600">
+            <span>Analyze Another</span>
+            <span>🔄</span>
+        </a>
+    </div>
+</div>
+{% endblock %}

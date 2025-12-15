@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="flex flex-col items-center justify-center min-h-[80vh] text-center relative overflow-hidden">
+    <!-- Background Elements -->
+    <div class="absolute top-0 left-0 w-full h-full overflow-hidden -z-10">
+        <div
+            class="absolute top-10 left-10 w-72 h-72 bg-blue-500/10 dark:bg-blue-500/20 rounded-full blur-3xl animate-pulse">
+        </div>
+        <div
+            class="absolute bottom-10 right-10 w-96 h-96 bg-purple-500/10 dark:bg-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000">
+        </div>
+    </div>
+
+    <div
+        class="backdrop-blur-sm bg-white/30 dark:bg-gray-800/30 p-12 rounded-3xl border border-gray-200/50 dark:border-gray-700/50 shadow-xl dark:shadow-2xl max-w-4xl mx-4 transition-colors duration-200">
+        <h1
+            class="text-6xl font-extrabold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 dark:from-blue-400 dark:via-purple-500 dark:to-pink-500">
+            Intelligent Spam Detection
+        </h1>
+        <p class="text-xl text-gray-700 dark:text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed">
+            Secure your communications with our advanced AI-powered detection system.
+            Instantly identify <span class="text-red-600 dark:text-red-400 font-semibold">Spam</span> and verify <span
+                class="text-green-600 dark:text-green-400 font-semibold">Ham</span> messages with high precision.
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-6 justify-center">
+            {% if session.get('user_id') %}
+            <a href="/predict"
+                class="group relative px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-full font-bold text-lg text-white shadow-lg hover:shadow-blue-500/50 transition transform hover:-translate-y-1">
+                <span class="relative z-10 flex items-center gap-2">
+                    Start Detection 🚀
+                </span>
+                <div
+                    class="absolute inset-0 rounded-full bg-white/20 blur-md opacity-0 group-hover:opacity-100 transition">
+                </div>
+            </a>
+            <a href="/stats"
+                class="px-8 py-4 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-800 dark:text-white rounded-full font-bold text-lg shadow-lg transition transform hover:-translate-y-1 border border-gray-200 dark:border-gray-600">
+                View Statistics 📊
+            </a>
+            {% else %}
+            <a href="/login"
+                class="group relative px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-full font-bold text-lg text-white shadow-lg hover:shadow-blue-500/50 transition transform hover:-translate-y-1">
+                Get Started Now
+            </a>
+            <a href="/signup"
+                class="px-8 py-4 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-800 dark:text-white rounded-full font-bold text-lg shadow-lg transition transform hover:-translate-y-1 border border-gray-200 dark:border-gray-600">
+                Create Account
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
