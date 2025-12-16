@@ -22,6 +22,50 @@
                     placeholder="e.g., Win a free iPhone now! Click here..." required></textarea>
             </div>
 
+            <div class="space-y-3">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select Model</label>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- SVM -->
+                    <label class="cursor-pointer group">
+                        <input type="radio" name="model" value="svm" class="peer sr-only" checked>
+                        <div
+                            class="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 peer-checked:border-blue-500 dark:peer-checked:border-blue-400 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/20 transition-all duration-200 text-center h-full flex flex-col justify-center shadow-sm hover:shadow-md">
+                            <span
+                                class="block font-bold text-gray-800 dark:text-gray-100 mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">SVM</span>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">Support Vector Machine</span>
+                        </div>
+                    </label>
+
+                    <!-- LightGBM -->
+                    <label class="cursor-pointer group">
+                        <input type="radio" name="model" value="lightgbm" class="peer sr-only">
+                        <div
+                            class="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 peer-checked:border-purple-500 dark:peer-checked:border-purple-400 peer-checked:bg-purple-50 dark:peer-checked:bg-purple-900/20 transition-all duration-200 text-center h-full flex flex-col justify-center shadow-sm hover:shadow-md">
+                            <span
+                                class="block font-bold text-gray-800 dark:text-gray-100 mb-1 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">LightGBM</span>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">Gradient Boosting</span>
+                        </div>
+                    </label>
+
+                    <!-- Hybrid -->
+                    <label class="cursor-pointer group">
+                        <input type="radio" name="model" value="ensemble" class="peer sr-only">
+                        <div
+                            class="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 peer-checked:border-indigo-500 dark:peer-checked:border-indigo-400 peer-checked:bg-indigo-50 dark:peer-checked:bg-indigo-900/20 transition-all duration-200 text-center h-full flex flex-col justify-center shadow-sm hover:shadow-md relative overflow-hidden">
+                            <!-- Optional "New" badge -->
+                            <div class="absolute top-0 right-0 w-8 h-8 flex items-center justify-center">
+                                <span
+                                    class="absolute transform rotate-45 bg-indigo-500 text-[8px] text-white font-bold py-0.5 px-3 right-[-10px] top-[2px] shadow-sm">NEW</span>
+                            </div>
+                            <span
+                                class="block font-bold text-gray-800 dark:text-gray-100 mb-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">Hybrid
+                                Model</span>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">Ensemble Power</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
             <button type="submit"
                 class="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-xl transition transform hover:scale-[1.01] shadow-lg flex items-center justify-center gap-2 text-lg">
                 <span>Run Detection</span>

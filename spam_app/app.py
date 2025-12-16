@@ -76,14 +76,21 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+
 # ==============================
 # LOAD MODEL & VECTORIZER
 # ==============================
+import lightgbm as lgb
+
 with open(os.path.join(BASE_DIR, "svm_model.pkl"), "rb") as f:
     model = pickle.load(f)
 
+# Load LightGBM Model
+lgb_model = lgb.Booster(model_file=os.path.join(BASE_DIR, "lightgbm_model.txt"))
+
 with open(os.path.join(BASE_DIR, "vectorizer.pkl"), "rb") as f:
     vectorizer = pickle.load(f)
+
 
 # ==============================
 # CLEAN TEXT (MUST MATCH TRAINING)
@@ -194,23 +201,44 @@ def predict():
         cleaned_message = clean_text(message)
         vectorized_message = vectorizer.transform([cleaned_message])
 
-        # --------------------------
-        # MODEL PREDICTION (CORRECT)
-        # --------------------------
-        pred = model.predict(vectorized_message)[0]
-        proba = model.predict_proba(vectorized_message)[0]
-        classes = model.classes_
+        # Get model selection from form (default to svm if not specified)
+        selected_model = request.form.get("model", "svm")
+        
+        # --- SVM PREDICTION ---
+        svm_proba = model.predict_proba(vectorized_message)[0]
+        svm_classes = list(model.classes_)
+        
+        # Find index of 'spam' or '1' class for SVM
+        spam_index = -1
+        for idx, cls in enumerate(svm_classes):
+            if str(cls).lower() in ['spam', '1']:
+                spam_index = idx
+                break
+        
+        # If safely found spam class, get its probability, else default to 0 (should not happen usually)
+        if spam_index != -1:
+            svm_spam_prob = svm_proba[spam_index]
+        else:
+            # Fallback if classes are weird, though they shouldn't be
+            svm_spam_prob = 0.5 
 
-        # index of predicted class
-        pred_index = list(classes).index(pred)
-        confidence = proba[pred_index]
+        # --- LIGHTGBM PREDICTION ---
+        # LightGBM predict returns raw probabilities for the positive class (spam)
+        lgb_spam_prob = lgb_model.predict(vectorized_message)[0]
 
-        # Determine if spam based on prediction value
-        # Handle both integer (1) and string ('spam') labels
-        pred_str = str(pred).lower()
-        is_spam = (pred_str == 'spam' or pred_str == '1')
+        # --- DECISION LOGIC ---
+        if selected_model == "ensemble":
+            # Hybrid (Ensemble) Model: Average of SVM and LightGBM
+            final_spam_prob = (svm_spam_prob + lgb_spam_prob) / 2
+        elif selected_model == "lightgbm":
+            final_spam_prob = lgb_spam_prob
+        else:
+            # Default to SVM
+            final_spam_prob = svm_spam_prob
 
-        is_spam = (pred_str == 'spam' or pred_str == '1')
+        # Determine result
+        is_spam = final_spam_prob >= 0.5
+        confidence = final_spam_prob if is_spam else (1 - final_spam_prob)
 
         update_user_stats(session['user_id'], is_spam)
 
@@ -218,7 +246,8 @@ def predict():
             "result.html",
             message=message,
             prediction="Spam 🚨" if is_spam else "Ham ✅",
-            confidence=f"{confidence:.2f}"
+            confidence=f"{confidence:.2f}",
+            model_used=selected_model # Optional: pass back which model was used if needed
         )
 
     return render_template("predict.html")
@@ -233,7 +262,7 @@ def stats():
     if session.get('is_admin'):
         # ADMIN VIEW: Fetch stats for ALL users
         c.execute("""
-            SELECT u.name, u.email, 
+            SELECT u.id, u.name, u.email, 
                    COALESCE(us.total, 0) as total, 
                    COALESCE(us.spam, 0) as spam, 
                    COALESCE(us.ham, 0) as ham
@@ -257,6 +286,38 @@ def stats():
             stats = {"total": 0, "spam": 0, "ham": 0}
 
         return render_template("stats.html", stats=stats, is_admin=False)
+
+@app.route('/delete_user/<int:user_id>', methods=['POST'])
+@login_required
+def delete_user(user_id):
+    if not session.get('is_admin'):
+        flash('Unauthorized access.', 'error')
+        return redirect(url_for('home'))
+
+    # Prevent admin from deleting themselves (optional safety, dependent on ID)
+    # Assuming 'admin@gmail.com' is the main admin, we can check email or ID.
+    # user_id 1 is usually the first admin in this setup, or we check current session.
+    if user_id == session['user_id']:
+        flash('You cannot delete your own account while logged in.', 'error')
+        return redirect(url_for('stats'))
+
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    
+    try:
+        # Delete from user_stats first
+        c.execute("DELETE FROM user_stats WHERE user_id = ?", (user_id,))
+        # Delete from users
+        c.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        conn.commit()
+        flash('User deleted successfully.', 'success')
+    except Exception as e:
+        conn.rollback()
+        flash(f'Error deleting user: {str(e)}', 'error')
+    finally:
+        conn.close()
+        
+    return redirect(url_for('stats'))
 
 if __name__ == "__main__":
     app.run(debug=True)
