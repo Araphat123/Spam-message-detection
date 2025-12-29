@@ -111,19 +111,27 @@
 <script>
     const ctx = document.getElementById('statsChart').getContext('2d');
 
-    // Parse values safely to avoid JS syntax errors with Jinja2 tags
+    // Parse values safely
     const spamCount = Number('{{ stats.spam }}');
     const hamCount = Number('{{ stats.ham }}');
 
-    new Chart(ctx, {
+    function getThemeColors() {
+        const isDark = document.documentElement.classList.contains('dark');
+        return {
+            legendColor: isDark ? '#cbd5e1' : '#4b5563',
+            borderColor: isDark ? '#1f2937' : '#ffffff'
+        };
+    }
+
+    const chart = new Chart(ctx, {
         type: 'doughnut',
         data: {
             labels: ['Spam', 'Ham'],
             datasets: [{
                 data: [spamCount, hamCount],
                 backgroundColor: [
-                    'rgba(239, 68, 68, 0.8)', // Red for Spam
-                    'rgba(34, 197, 94, 0.8)'  // Green for Ham
+                    'rgba(239, 68, 68, 0.8)', // Red
+                    'rgba(34, 197, 94, 0.8)'  // Green
                 ],
                 borderColor: [
                     'rgba(239, 68, 68, 1)',
@@ -139,15 +147,28 @@
                 legend: {
                     position: 'bottom',
                     labels: {
-                        // Simple initial check for dark mode
-                        color: document.documentElement.classList.contains('dark') ? '#cbd5e1' : '#4b5563',
-                        font: {
-                            size: 14
-                        }
+                        color: getThemeColors().legendColor,
+                        font: { size: 14 }
                     }
                 }
             }
         }
+    });
+
+    // Watch for theme changes
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.attributeName === 'class') {
+                const colors = getThemeColors();
+                chart.options.plugins.legend.labels.color = colors.legendColor;
+                chart.update();
+            }
+        });
+    });
+
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class']
     });
 </script>
 {% endif %}

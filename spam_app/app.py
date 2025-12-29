@@ -252,6 +252,56 @@ def predict():
 
     return render_template("predict.html")
 
+@app.route("/api/predict", methods=["POST"])
+@login_required
+def api_predict():
+    data = request.get_json()
+    message = data.get("message", "")
+    selected_model = data.get("model", "svm")
+
+    if not message:
+        return {"error": "No message provided"}, 400
+
+    cleaned_message = clean_text(message)
+    vectorized_message = vectorizer.transform([cleaned_message])
+
+    # --- SVM PREDICTION ---
+    svm_proba = model.predict_proba(vectorized_message)[0]
+    svm_classes = list(model.classes_)
+    
+    spam_index = -1
+    for idx, cls in enumerate(svm_classes):
+        if str(cls).lower() in ['spam', '1']:
+            spam_index = idx
+            break
+    
+    if spam_index != -1:
+        svm_spam_prob = svm_proba[spam_index]
+    else:
+        svm_spam_prob = 0.5 
+
+    # --- LIGHTGBM PREDICTION ---
+    lgb_spam_prob = lgb_model.predict(vectorized_message)[0]
+
+    # --- DECISION LOGIC ---
+    if selected_model == "ensemble":
+        final_spam_prob = (svm_spam_prob + lgb_spam_prob) / 2
+    elif selected_model == "lightgbm":
+        final_spam_prob = lgb_spam_prob
+    else:
+        final_spam_prob = svm_spam_prob
+
+    is_spam = final_spam_prob >= 0.5
+    confidence = final_spam_prob if is_spam else (1 - final_spam_prob)
+
+    update_user_stats(session['user_id'], is_spam)
+
+    return {
+        "is_spam": bool(is_spam),
+        "confidence": round(confidence * 100, 2), # Return as percentage
+        "model_used": selected_model
+    }
+
 @app.route("/stats")
 @login_required
 def stats():

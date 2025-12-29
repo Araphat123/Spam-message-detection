@@ -1,9 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="flex items-center justify-center min-h-[80vh]">
+<div class="flex items-center justify-center min-h-[80vh] p-4">
     <div
         class="w-full max-w-2xl bg-white dark:bg-gray-800/50 backdrop-blur-md p-8 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700/50 transition-colors duration-200">
+
+        <!-- Header -->
         <div class="text-center mb-8">
             <h2
                 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400">
@@ -12,7 +14,8 @@
             <p class="text-gray-600 dark:text-gray-400 mt-2">Paste your text below to detect if it's Spam or Ham</p>
         </div>
 
-        <form action="/predict" method="POST" class="space-y-6">
+        <!-- Form -->
+        <form id="predictForm" class="space-y-6">
             <div class="relative group">
                 <div
                     class="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200">
@@ -52,7 +55,6 @@
                         <input type="radio" name="model" value="ensemble" class="peer sr-only">
                         <div
                             class="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 peer-checked:border-indigo-500 dark:peer-checked:border-indigo-400 peer-checked:bg-indigo-50 dark:peer-checked:bg-indigo-900/20 transition-all duration-200 text-center h-full flex flex-col justify-center shadow-sm hover:shadow-md relative overflow-hidden">
-                            <!-- Optional "New" badge -->
                             <div class="absolute top-0 right-0 w-8 h-8 flex items-center justify-center">
                                 <span
                                     class="absolute transform rotate-45 bg-indigo-500 text-[8px] text-white font-bold py-0.5 px-3 right-[-10px] top-[2px] shadow-sm">NEW</span>
@@ -66,12 +68,110 @@
                 </div>
             </div>
 
-            <button type="submit"
-                class="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-xl transition transform hover:scale-[1.01] shadow-lg flex items-center justify-center gap-2 text-lg">
-                <span>Run Detection</span>
-                <span class="text-xl">🔍</span>
+            <button type="submit" id="submitBtn"
+                class="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-xl transition transform hover:scale-[1.01] shadow-lg flex items-center justify-center gap-2 text-lg disabled:opacity-70 disabled:cursor-not-allowed">
+                <span id="btnText">Run Detection</span>
+                <span id="btnIcon" class="text-xl">🔍</span>
+                <svg id="loadingSpinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden"
+                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                    </path>
+                </svg>
             </button>
         </form>
+
+        <!-- Result Container -->
+        <div id="resultContainer"
+            class="hidden mt-8 p-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 text-center transition-all duration-500 transform scale-95 opacity-0">
+            <h3 class="text-2xl font-bold mb-2" id="resultTitle"></h3>
+            <p class="text-gray-600 dark:text-gray-400 mb-4">Confidence: <span id="resultConfidence"
+                    class="font-bold"></span>%</p>
+            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-4">
+                <div id="confidenceBar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-1000"
+                    style="width: 0%"></div>
+            </div>
+            <p class="text-xs text-gray-500 dark:text-gray-500">Model used: <span id="resultModel"></span></p>
+        </div>
+
     </div>
 </div>
+
+<script>
+    document.getElementById('predictForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const form = e.target;
+        const message = document.getElementById('message').value;
+        const model = document.querySelector('input[name="model"]:checked').value;
+        const btn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        const btnIcon = document.getElementById('btnIcon');
+        const spinner = document.getElementById('loadingSpinner');
+        const resultContainer = document.getElementById('resultContainer');
+
+        // Loading State
+        btn.disabled = true;
+        btnText.textContent = 'Analyzing...';
+        btnIcon.classList.add('hidden');
+        spinner.classList.remove('hidden');
+        resultContainer.classList.add('hidden', 'scale-95', 'opacity-0');
+
+        try {
+            const response = await fetch('/api/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message, model })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Update Result
+                const isSpam = data.is_spam;
+                const titleEl = document.getElementById('resultTitle');
+                const confEl = document.getElementById('resultConfidence');
+                const barEl = document.getElementById('confidenceBar');
+                const modelEl = document.getElementById('resultModel');
+
+                if (isSpam) {
+                    titleEl.textContent = 'Spam Detected 🚨';
+                    titleEl.className = 'text-2xl font-bold mb-2 text-red-600 dark:text-red-500';
+                    barEl.className = 'bg-red-600 dark:bg-red-500 h-2.5 rounded-full transition-all duration-1000';
+                } else {
+                    titleEl.textContent = 'Clean Message ✅';
+                    titleEl.className = 'text-2xl font-bold mb-2 text-green-600 dark:text-green-500';
+                    barEl.className = 'bg-green-600 dark:bg-green-500 h-2.5 rounded-full transition-all duration-1000';
+                }
+
+                confEl.textContent = data.confidence;
+                modelEl.textContent = data.model_used;
+
+                // Show Result
+                resultContainer.classList.remove('hidden');
+                // Small delay to allow transition
+                setTimeout(() => {
+                    resultContainer.classList.remove('scale-95', 'opacity-0');
+                    barEl.style.width = data.confidence + '%';
+                }, 50);
+
+            } else {
+                alert('Error: ' + (data.error || 'Something went wrong'));
+            }
+
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred during prediction.');
+        } finally {
+            // Reset Button
+            btn.disabled = false;
+            btnText.textContent = 'Run Detection';
+            btnIcon.classList.remove('hidden');
+            spinner.classList.add('hidden');
+        }
+    });
+</script>
 {% endblock %}
