@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto mt-10">
+    <div class="flex justify-between items-center mb-8">
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-white">🚀 Batch Scan Results</h2>
+        <a href="/batch"
+            class="px-5 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+            ← Scan Another File
+        </a>
+    </div>
+
+    <div
+        class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr
+                        class="bg-gray-50 dark:bg-gray-900/50 text-gray-600 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">
+                        <th class="py-4 px-6 font-semibold">Message</th>
+                        <th class="py-4 px-6 font-semibold w-32 text-center">Prediction</th>
+                        <th class="py-4 px-6 font-semibold w-32 text-center">Confidence</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-700 dark:text-gray-300 divide-y divide-gray-100 dark:divide-gray-700/50">
+                    {% for item in results %}
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition duration-150">
+                        <td class="py-4 px-6 max-w-2xl truncate" title="{{ item.message }}">
+                            {{ item.message }}
+                        </td>
+                        <td class="py-4 px-6 text-center">
+                            {% if item.is_spam %}
+                            <span
+                                class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
+                                🚨 SPAM
+                            </span>
+                            {% else %}
+                            <span
+                                class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                                ✅ HAM
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-6 text-center font-mono text-sm">
+                            {{ item.confidence }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

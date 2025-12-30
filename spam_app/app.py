@@ -7,7 +7,11 @@ import nltk
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
+from functools import wraps
 from nltk.corpus import stopwords
+import secrets
+import datetime
+from heuristics import calculate_heuristic_score
 
 # ==============================
 # NLTK SETUP
@@ -59,6 +63,24 @@ def init_db():
                   ('Admin', 'admin@gmail.com', hashed_pw))
         print("Default admin user created.")
     
+    c.execute('''CREATE TABLE IF NOT EXISTS api_keys
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  user_id INTEGER NOT NULL,
+                  key_hash TEXT UNIQUE NOT NULL,
+                  name TEXT NOT NULL,
+                  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                  FOREIGN KEY(user_id) REFERENCES users(id))''')
+
+    c.execute('''CREATE TABLE IF NOT EXISTS scan_history
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  user_id INTEGER NOT NULL,
+                  message_snippet TEXT,
+                  is_spam BOOLEAN,
+                  confidence FLOAT,
+                  model_used TEXT,
+                  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                  FOREIGN KEY(user_id) REFERENCES users(id))''')
+
     conn.commit()
     conn.close()
 
@@ -112,6 +134,9 @@ def update_user_stats(user_id, is_spam):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     
+    # Ensure standard python types
+    is_spam = bool(is_spam)
+    
     # Check if record exists
     c.execute("SELECT * FROM user_stats WHERE user_id = ?", (user_id,))
     if not c.fetchone():
@@ -123,6 +148,34 @@ def update_user_stats(user_id, is_spam):
     else:
         c.execute("UPDATE user_stats SET total = total + 1, ham = ham + 1 WHERE user_id = ?", (user_id,))
         
+    conn.commit()
+    conn.close()
+
+# ==============================
+# HELPERS
+# ==============================
+def get_user_api_keys(user_id):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute("SELECT * FROM api_keys WHERE user_id = ? ORDER BY created_at DESC", (user_id,))
+    keys = c.fetchall()
+    conn.close()
+    return keys
+
+def log_scan_history(user_id, message, is_spam, confidence, model_used):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    
+    # Ensure standard python types for SQLite
+    is_spam = int(bool(is_spam)) # Store as 0 or 1
+    confidence = float(confidence)
+    
+    # Keep snippet short
+    snippet = (message[:50] + '...') if len(message) > 50 else message
+    c.execute("""
+        INSERT INTO scan_history (user_id, message_snippet, is_spam, confidence, model_used)
+        VALUES (?, ?, ?, ?, ?)
+    """, (user_id, snippet, is_spam, confidence, model_used))
     conn.commit()
     conn.close()
 
@@ -229,18 +282,47 @@ def predict():
         # --- DECISION LOGIC ---
         if selected_model == "ensemble":
             # Hybrid (Ensemble) Model: Average of SVM and LightGBM
-            final_spam_prob = (svm_spam_prob + lgb_spam_prob) / 2
+            ml_prob = (svm_spam_prob + lgb_spam_prob) / 2
         elif selected_model == "lightgbm":
-            final_spam_prob = lgb_spam_prob
+            ml_prob = lgb_spam_prob
         else:
             # Default to SVM
-            final_spam_prob = svm_spam_prob
-
+            ml_prob = svm_spam_prob
+            
+        # --- HEURISTIC BOOST ---
+        # Calculate rule-based score on RAW message (symbols matter!)
+        heuristic_score = calculate_heuristic_score(message)
+        
+        # --- HEURISTIC BOOST ---
+        # Calculate rule-based score on RAW message (symbols matter!)
+        heuristic_score = calculate_heuristic_score(message)
+        
+        # NEW LOGIC: Trust ML more for strong Ham predictions
+        if ml_prob < 0.2:
+            # If ML is very sure it's Ham, we ignore heuristics unless they are EXTREME (1.0)
+            if heuristic_score >= 0.9:
+                final_spam_prob = (ml_prob * 0.5) + (heuristic_score * 0.5)
+            else:
+                final_spam_prob = ml_prob # Trust ML
+        elif heuristic_score > 0.8:
+            # Strong heuristic evidence of spam
+            final_spam_prob = (ml_prob * 0.3) + (heuristic_score * 0.7)
+        else:
+            # Gray area: mix them
+            final_spam_prob = (ml_prob * 0.8) + (heuristic_score * 0.2)
+            
+        # --- CONFIDENCE STRENGTHENER ---
+        if final_spam_prob > 0.5:
+            final_spam_prob = min(0.99, final_spam_prob + 0.15)
+        else:
+            final_spam_prob = max(0.01, final_spam_prob - 0.15)
+            
         # Determine result
         is_spam = final_spam_prob >= 0.5
         confidence = final_spam_prob if is_spam else (1 - final_spam_prob)
 
         update_user_stats(session['user_id'], is_spam)
+        log_scan_history(session['user_id'], message, is_spam, confidence, selected_model)
 
         return render_template(
             "result.html",
@@ -252,9 +334,200 @@ def predict():
 
     return render_template("predict.html")
 
-@app.route("/api/predict", methods=["POST"])
+@app.route("/settings", methods=["GET", "POST"])
 @login_required
+def settings():
+    new_key = None
+    if request.method == "POST":
+        action = request.form.get("action")
+        
+        if action == "generate_key":
+            conn = sqlite3.connect(DB_FILE)
+            c = conn.cursor()
+            
+            # Generate key: sk_uuid4hex
+            raw_key = f"sk_{secrets.token_hex(16)}"
+            key_hash = generate_password_hash(raw_key)
+            name = request.form.get("key_name", "My API Key")
+            
+            c.execute("INSERT INTO api_keys (user_id, key_hash, name) VALUES (?, ?, ?)",
+                      (session['user_id'], key_hash, name))
+            conn.commit()
+            conn.close()
+            
+            new_key = raw_key
+            flash("New API Key generated. Copy it now, you won't see it again!", "success")
+            
+        elif action == "delete_key":
+            key_id = request.form.get("key_id")
+            conn = sqlite3.connect(DB_FILE)
+            c = conn.cursor()
+            c.execute("DELETE FROM api_keys WHERE id = ? AND user_id = ?", (key_id, session['user_id']))
+            conn.commit()
+            conn.close()
+            flash("API Key deleted.", "success")
+
+    keys = get_user_api_keys(session['user_id'])
+    return render_template("settings.html", keys=keys, new_key=new_key)
+
+@app.route("/history")
+@login_required
+def history():
+    conn = sqlite3.connect(DB_FILE)
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    c.execute("SELECT * FROM scan_history WHERE user_id = ? ORDER BY timestamp DESC LIMIT 50", (session['user_id'],))
+    history_items = c.fetchall()
+    conn.close()
+    return render_template("history.html", history=history_items)
+
+@app.route("/stats/clear", methods=["POST"])
+@login_required
+def clear_stats():
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    # Reset stats to 0 instead of deleting?
+    # Or delete the row so it re-initializes to 0 next time?
+    # Logic in update_user_stats inserts 0 if missing. So deleting is fine.
+    c.execute("DELETE FROM user_stats WHERE user_id = ?", (session['user_id'],))
+    conn.commit()
+    conn.close()
+    flash("Statistics cleared successfully.", "success")
+    return redirect(url_for('stats'))
+
+@app.route("/history/clear", methods=["POST"])
+@login_required
+def clear_history():
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute("DELETE FROM scan_history WHERE user_id = ?", (session['user_id'],))
+    conn.commit()
+    conn.close()
+    flash("History cleared successfully.", "success")
+    return redirect(url_for('history'))
+
+@app.route("/batch", methods=["GET", "POST"])
+@login_required
+def batch():
+    # Only allow uploading if pandas is installed
+    try:
+        import pandas as pd
+    except ImportError:
+        flash("Pandas not installed. Batch processing unavailable.", "error")
+        return redirect(url_for('home'))
+
+    if request.method == "POST":
+        if 'file' not in request.files:
+            flash('No file part', 'error')
+            return redirect(request.url)
+            
+        file = request.files['file']
+        if file.filename == '':
+            flash('No selected file', 'error')
+            return redirect(request.url)
+            
+        if file:
+            try:
+                if file.filename.endswith('.csv'):
+                    df = pd.read_csv(file)
+                elif file.filename.endswith(('.xls', '.xlsx')):
+                    df = pd.read_excel(file)
+                else:
+                    flash('Invalid file type. Please upload CSV or Excel.', 'error')
+                    return redirect(request.url)
+                
+                # Check for 'message' or 'text' column
+                col_name = None
+                for candidate in ['message', 'text', 'sms', 'content']:
+                    if candidate in [c.lower() for c in df.columns]:
+                        # Find exact case
+                        col_name = next(c for c in df.columns if c.lower() == candidate)
+                        break
+                
+                if not col_name:
+                    flash('Could not find a "message" or "text" column in your file.', 'error')
+                    return redirect(request.url)
+                
+                # Process
+                results = []
+                for msg in df[col_name].dropna().astype(str):
+                    cleaned = clean_text(msg)
+                    vec = vectorizer.transform([cleaned])
+                    prob = model.predict_proba(vec)[0]
+                    # Simple SVM check for batch
+                    # Find spam index
+                    svm_classes = list(model.classes_)
+                    spam_prob = 0.5
+                    for idx, cls in enumerate(svm_classes):
+                        if str(cls).lower() in ['spam', '1']:
+                            spam_prob = prob[idx]
+                            break
+                    
+                    is_spam = spam_prob >= 0.5
+                    log_scan_history(session['user_id'], msg, is_spam, 
+                                     spam_prob if is_spam else 1-spam_prob, 'batch-svm')
+                    results.append({
+                        'message': msg,
+                        'is_spam': is_spam,
+                        'confidence': f"{spam_prob if is_spam else 1-spam_prob:.2%}"
+                    })
+                
+                return render_template("batch_result.html", results=results)
+
+            except Exception as e:
+                flash(f"Error processing file: {e}", "error")
+                return redirect(request.url)
+
+    return render_template("batch.html")
+
+@app.route("/api/predict", methods=["POST"])
 def api_predict():
+    # 1. Custom Auth Check
+    user_id = session.get('user_id')
+    
+    if not user_id:
+        # Check API Key
+        auth_header = request.headers.get('Authorization')
+        if auth_header and auth_header.startswith("Bearer "):
+            raw_key = auth_header.split(" ")[1]
+            # Key verification is expensive (hashing), so we query all keys for validity?
+            # Better: Since we can't unhash, we rely on the specific key.
+            # Wait, verify logic:
+            # We can't reverse the hash. We have to iterate users? No, that's slow.
+            # Actually, standard practice for hashed keys:
+            # We can store a prefix or ID in the key, e.g. "sk_USERID_RANDOM".
+            # BUT, for now, let's assume we iterate or checking logic.
+            # OPTION B: Store keys as "sk_TOKEN".
+            # To Verify: We need to hash the incoming key and look it up.
+            # Since generate_password_hash uses salt, we CANNOT "lookup" by hash directly if salt is random per hash.
+            # werkzeug.security.check_password_hash requires the stored hash.
+            # So we must iterate all keys? That's bad for performance.
+            # FIX: We will find the key by its exact match if we used SHA256 manually? 
+            # Or simplified: For this project, let's iterate. We assume few keys.
+            
+            # IMPROVEMENT: Use direct hashing (SHA256) for API keys so we can look them up.
+            # Current Implementation uses generate_password_hash which is safe but non-searchable.
+            # Quick fix: Iterate all keys (okay for small scale).
+            
+            valid_user = None
+            conn = sqlite3.connect(DB_FILE)
+            c = conn.cursor()
+            c.execute("SELECT user_id, key_hash FROM api_keys")
+            all_keys = c.fetchall()
+            conn.close()
+            
+            for uid, khash in all_keys:
+                if check_password_hash(khash, raw_key):
+                    valid_user = uid
+                    break
+            
+            if valid_user:
+                user_id = valid_user
+            else:
+                return {"error": "Invalid API Key"}, 401
+        else:
+            return {"error": "Unauthorized. Please login or provide API Key."}, 401
+
     data = request.get_json()
     message = data.get("message", "")
     selected_model = data.get("model", "svm")
@@ -284,17 +557,48 @@ def api_predict():
     lgb_spam_prob = lgb_model.predict(vectorized_message)[0]
 
     # --- DECISION LOGIC ---
+    # --- DECISION LOGIC ---
     if selected_model == "ensemble":
-        final_spam_prob = (svm_spam_prob + lgb_spam_prob) / 2
+        ml_prob = (svm_spam_prob + lgb_spam_prob) / 2
     elif selected_model == "lightgbm":
-        final_spam_prob = lgb_spam_prob
+        ml_prob = lgb_spam_prob
     else:
-        final_spam_prob = svm_spam_prob
+        ml_prob = svm_spam_prob
+        
+    # --- HEURISTIC BOOST ---
+    heuristic_score = calculate_heuristic_score(message)
+    
+    # --- HEURISTIC BOOST ---
+    heuristic_score = calculate_heuristic_score(message)
+    
+    # NEW LOGIC: Trust ML more for strong Ham predictions
+    if ml_prob < 0.2:
+        # If ML is very sure it's Ham, we ignore heuristics unless they are EXTREME (1.0)
+        if heuristic_score >= 0.9:
+            final_spam_prob = (ml_prob * 0.5) + (heuristic_score * 0.5)
+        else:
+            final_spam_prob = ml_prob # Trust ML
+    elif heuristic_score > 0.8:
+        # Strong heuristic evidence of spam
+        final_spam_prob = (ml_prob * 0.3) + (heuristic_score * 0.7)
+    else:
+        # Gray area: mix them
+        final_spam_prob = (ml_prob * 0.8) + (heuristic_score * 0.2)
+
+    # --- CONFIDENCE STRENGTHENER ---
+    # Push the probability towards the extremes (0 or 1) to give the user "Stronger" answers.
+    if final_spam_prob > 0.5:
+        # Boost Spam Confidence
+        final_spam_prob = min(0.99, final_spam_prob + 0.15)
+    else:
+        # Boost Ham Confidence (reduce spam prob)
+        final_spam_prob = max(0.01, final_spam_prob - 0.15)
 
     is_spam = final_spam_prob >= 0.5
     confidence = final_spam_prob if is_spam else (1 - final_spam_prob)
 
-    update_user_stats(session['user_id'], is_spam)
+    update_user_stats(user_id, is_spam)
+    log_scan_history(user_id, message, is_spam, confidence, selected_model)
 
     return {
         "is_spam": bool(is_spam),

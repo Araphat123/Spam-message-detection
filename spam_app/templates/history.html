@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto mt-10">
+    <div class="flex justify-between items-center mb-8">
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-white">📜 Scan History</h2>
+
+        {% if history|length > 0 %}
+        <form action="/history/clear" method="POST"
+            onsubmit="return confirm('Are you sure you want to clear your entire history? This cannot be undone.');">
+            <button type="submit"
+                class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg shadow transition duration-200 text-sm flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Clear History
+            </button>
+        </form>
+        {% endif %}
+    </div>
+
+    <div
+        class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr
+                        class="bg-gray-50 dark:bg-gray-900/50 text-gray-600 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">
+                        <th class="py-4 px-6 font-semibold">Time</th>
+                        <th class="py-4 px-6 font-semibold">Message</th>
+                        <th class="py-4 px-6 font-semibold">Model</th>
+                        <th class="py-4 px-6 font-semibold text-center">Result</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-700 dark:text-gray-300 divide-y divide-gray-100 dark:divide-gray-700/50">
+                    {% for item in history %}
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition duration-150">
+                        <td class="py-4 px-6 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
+                            {{ item['timestamp'] }}
+                        </td>
+                        <td class="py-4 px-6 max-w-md truncate" title="{{ item['message_snippet'] }}">
+                            {{ item['message_snippet'] }}
+                        </td>
+                        <td class="py-4 px-6 text-sm">
+                            <span class="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-xs font-medium">
+                                {{ item['model_used']|default('svm')|upper }}
+                            </span>
+                        </td>
+                        <td class="py-4 px-6 text-center">
+                            {% if item['is_spam'] %}
+                            <span
+                                class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
+                                🚨 Spam ({{ (item['confidence']*100)|round|int }}%)
+                            </span>
+                            {% else %}
+                            <span
+                                class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                                ✅ Ham ({{ (item['confidence']*100)|round|int }}%)
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="py-8 text-center text-gray-500 dark:text-gray-400">
+                            No history found. Start scanning messages!
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

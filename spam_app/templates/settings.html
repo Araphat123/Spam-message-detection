@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto mt-10">
+    <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+        <h2 class="text-3xl font-bold mb-6 text-gray-800 dark:text-gray-100">⚙️ Settings</h2>
+
+        <!-- API Keys Section -->
+        <div class="mb-10">
+            <h3 class="text-xl font-semibold mb-4 text-purple-600 dark:text-purple-400">Developer API Keys</h3>
+            <p class="text-gray-600 dark:text-gray-400 mb-4">
+                Use these keys to access the <code>/api/predict</code> endpoint programmatically.
+                Include the header: <code>Authorization: Bearer &lt;your_key&gt;</code>.
+            </p>
+
+            {% if new_key %}
+            <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded" role="alert">
+                <p class="font-bold">Key Generated Successfully!</p>
+                <p>Please copy your new API key now. You won't be able to see it again.</p>
+                <code class="block mt-2 bg-white p-2 rounded border border-green-200 select-all">{{ new_key }}</code>
+            </div>
+            {% endif %}
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="text-gray-600 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">
+                            <th class="py-2 px-2">Name</th>
+                            <th class="py-2 px-2">Created</th>
+                            <th class="py-2 px-2 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-700 dark:text-gray-300">
+                        {% for key in keys %}
+                        <tr class="border-b border-gray-100 dark:border-gray-700/50">
+                            <td class="py-3 px-2 font-medium">{{ key[3] }}</td>
+                            <td class="py-3 px-2 text-sm">{{ key[4] }}</td>
+                            <td class="py-3 px-2 text-right">
+                                <form action="{{ url_for('settings') }}" method="POST" class="inline"
+                                    onsubmit="return confirm('Revoke this key?');">
+                                    <input type="hidden" name="action" value="delete_key">
+                                    <input type="hidden" name="key_id" value="{{ key[0] }}">
+                                    <button type="submit"
+                                        class="text-red-500 hover:text-red-700 text-sm font-semibold">Revoke</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="3" class="py-4 text-center text-gray-500">No API keys generated yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Generate New Key -->
+            <form action="{{ url_for('settings') }}" method="POST" class="mt-6 flex gap-4 items-end">
+                <input type="hidden" name="action" value="generate_key">
+                <div class="flex-grow">
+                    <label for="key_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Key
+                        Name</label>
+                    <input type="text" name="key_name" placeholder="e.g. My Python Script" required
+                        class="w-full bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg p-2 focus:ring-2 focus:ring-purple-500 outline-none">
+                </div>
+                <button type="submit"
+                    class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg transition duration-200">
+                    Generate Key
+                </button>
+            </form>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
