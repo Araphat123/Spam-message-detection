@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block auth_content %}
+<div
+    class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 backdrop-blur-sm bg-opacity-90">
+    <div class="text-center mb-8">
+        <h2
+            class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-indigo-600 dark:from-primary-400 dark:to-indigo-400">
+            Create Account
+        </h2>
+        <p class="text-gray-500 dark:text-gray-400 mt-2">Join SpamGuard today and stay protected</p>
+    </div>
+
+    <form action="{{ url_for('signup') }}" method="POST" class="space-y-4">
+        <div>
+            <label for="name" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Full
+                Name</label>
+            <input type="text" id="name" name="name" required placeholder="John Doe"
+                class="w-full bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-700 rounded-xl p-3 focus:ring-2 focus:ring-primary-500 outline-none transition duration-200">
+        </div>
+        <div>
+            <label for="email" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Email
+                Address</label>
+            <input type="email" id="email" name="email" required placeholder="name@example.com"
+                class="w-full bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-700 rounded-xl p-3 focus:ring-2 focus:ring-primary-500 outline-none transition duration-200">
+        </div>
+        <div>
+            <label for="password"
+                class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Password</label>
+            <input type="password" id="password" name="password" required placeholder="••••••••"
+                class="w-full bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-700 rounded-xl p-3 focus:ring-2 focus:ring-primary-500 outline-none transition duration-200">
+        </div>
+        <button type="submit"
+            class="w-full bg-gradient-to-r from-primary-600 to-indigo-600 hover:from-primary-700 hover:to-indigo-700 text-white font-bold py-3 rounded-xl transition transform hover:scale-[1.02] shadow-lg shadow-primary-500/25 mt-2">
+            Sign Up
+        </button>
+    </form>
+
+    <div class="mt-8 pt-6 border-t border-gray-100 dark:border-gray-700 text-center">
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+            Already have an account?
+            <a href="{{ url_for('login') }}"
+                class="text-primary-600 dark:text-primary-400 font-bold hover:underline">Login</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

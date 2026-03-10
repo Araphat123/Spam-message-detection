@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block main_body %}
+<div
+    class="min-h-[90vh] flex flex-col items-center justify-center p-4 relative overflow-hidden bg-white dark:bg-[#0f172a] transition-colors duration-700">
+
+    <!-- Dynamic Background Elements -->
+    <div class="absolute inset-0 pointer-events-none">
+        <div
+            class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary-500/10 dark:bg-primary-500/20 blur-[120px] rounded-full animate-pulse">
+        </div>
+        <div
+            class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-500/10 dark:bg-indigo-500/20 blur-[150px] rounded-full animate-pulse delay-700">
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="z-10 text-center max-w-5xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+
+        <!-- Hero Section -->
+        <div class="space-y-6">
+            <div
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/50 dark:shadow-none mb-4">
+                <span class="relative flex h-3 w-3">
+                    <span
+                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-primary-500"></span>
+                </span>
+                <span
+                    class="text-[11px] font-black uppercase tracking-widest text-primary-600 dark:text-primary-400">Next-Gen
+                    Intelligence Active</span>
+            </div>
+
+            <h1 class="text-6xl md:text-8xl font-black text-gray-900 dark:text-white tracking-tighter leading-[0.9]">
+                The Future of <br>
+                <span
+                    class="bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-indigo-600 dark:from-primary-400 dark:to-indigo-400">Digital
+                    Security</span>
+            </h1>
+
+            <p
+                class="text-xl md:text-2xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto font-medium leading-relaxed">
+                Elite AI models trained to protect your communications by instantly detecting spam, phising, and
+                malicious intent.
+            </p>
+        </div>
+
+        <!-- Call to Action -->
+        <div class="flex flex-col sm:flex-row gap-6 justify-center items-center">
+            {% if session.get('user_id') %}
+            <a href="{{ url_for('predict') }}"
+                class="group relative px-10 py-5 bg-primary-600 hover:bg-primary-700 text-white rounded-2xl font-black text-lg transition-all transform hover:scale-[1.05] shadow-2xl shadow-primary-500/40 uppercase tracking-widest flex items-center gap-3">
+                Enter Terminal
+                <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3">
+                    </path>
+                </svg>
+            </a>
+            {% else %}
+            <a href="{{ url_for('login') }}"
+                class="group relative px-10 py-5 bg-primary-600 hover:bg-primary-700 text-white rounded-2xl font-black text-lg transition-all transform hover:scale-[1.05] shadow-2xl shadow-primary-500/40 uppercase tracking-widest">
+                Authorize Access
+            </a>
+            <a href="{{ url_for('signup') }}"
+                class="px-10 py-5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-2xl font-black text-lg transition-all transform hover:scale-[1.05] shadow-xl border border-gray-100 dark:border-gray-700 uppercase tracking-widest">
+                Create Identity
+            </a>
+            {% endif %}
+        </div>
+
+        <!-- Trust Badges -->
+        <div class="pt-20">
+            <p class="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 dark:text-gray-600 mb-8 italic">
+                Fueled by advanced neural networks</p>
+            <div
+                class="flex flex-wrap justify-center gap-x-12 gap-y-8 opacity-40 grayscale group hover:grayscale-0 transition-all duration-700">
+                <span class="text-xl font-black text-gray-600 dark:text-gray-300">SCIKIT-LEARN</span>
+                <span class="text-xl font-black text-gray-600 dark:text-gray-300">FLASK-CORE</span>
+                <span class="text-xl font-black text-gray-600 dark:text-gray-300">SQLITE3</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating UI Artifacts -->
+    <div
+        class="hidden lg:block absolute left-10 top-1/2 -translate-y-1/2 space-y-4 opacity-0 animate-in fade-in slide-in-from-left-8 duration-1000 delay-500">
+        <div
+            class="p-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-100 dark:border-gray-700 shadow-2xl w-48 rotate-[-3deg]">
+            <div class="h-2 w-12 bg-green-500/20 rounded mb-2"></div>
+            <div class="h-2 w-full bg-gray-100 dark:bg-gray-700 rounded mb-1"></div>
+            <div class="h-2 w-2/3 bg-gray-100 dark:bg-gray-700 rounded"></div>
+        </div>
+        <div
+            class="p-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-100 dark:border-gray-700 shadow-2xl w-56 rotate-[2deg]">
+            <div class="flex justify-between mb-2">
+                <div class="h-2 w-8 bg-primary-500/20 rounded"></div>
+                <div class="h-2 w-4 bg-primary-500/40 rounded"></div>
+            </div>
+            <div class="h-12 w-full bg-gray-50 dark:bg-gray-900 rounded-xl"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}

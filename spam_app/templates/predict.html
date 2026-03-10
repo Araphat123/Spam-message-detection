@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block header_title %}Predictions{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+
+    <!-- GREETING & INFO -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+            <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100 italic">Analyze Message</h2>
+            <p class="text-gray-500 dark:text-gray-400">Discover if your message is safe or potentially harmful.</p>
+        </div>
+        <div class="hidden md:block">
+            <span
+                class="px-4 py-2 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-lg text-sm font-semibold border border-primary-200 dark:border-primary-800">
+                Ready for Analysis ✨
+            </span>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        <!-- INPUT AREA -->
+        <div class="lg:col-span-2 space-y-6">
+            <form id="predictForm"
+                class="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-gray-700 space-y-6">
+                <!-- Textarea -->
+                <div class="space-y-2">
+                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300">Your Message Content</label>
+                    <textarea id="message" name="message" rows="8"
+                        class="w-full bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 rounded-2xl p-5 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all resize-none placeholder-gray-400 dark:placeholder-gray-600 text-lg"
+                        placeholder="Paste your text here to scan..." required></textarea>
+                </div>
+
+                <button type="submit" id="submitBtn"
+                    class="w-full bg-gradient-to-r from-primary-600 to-indigo-600 hover:from-primary-700 hover:to-indigo-700 text-white font-bold py-4 rounded-2xl transition transform hover:scale-[1.01] shadow-xl shadow-primary-500/20 flex items-center justify-center gap-3 text-lg disabled:opacity-70 disabled:cursor-wait">
+                    <span id="btnText">Scan Message</span>
+                    <svg id="loadingSpinner" class="animate-spin h-6 w-6 text-white hidden"
+                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                        </circle>
+                        <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                        </path>
+                    </svg>
+                </button>
+            </form>
+
+        </div>
+
+        <!-- RESULT AREA -->
+        <div class="lg:col-span-1">
+            <div id="resultPlaceholder"
+                class="h-full min-h-[400px] border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-3xl flex flex-col items-center justify-center p-8 text-center bg-white/30 dark:bg-gray-800/30">
+                <div class="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mb-4">
+                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
+                        </path>
+                    </svg>
+                </div>
+                <h4 class="font-bold text-gray-700 dark:text-gray-300">Results Ready</h4>
+                <p class="text-xs text-gray-500 dark:text-gray-500 mt-2">Analysis results will appear here once scanning
+                    is complete.</p>
+            </div>
+
+            <!-- Result Card -->
+            <div id="resultContainer"
+                class="hidden h-full bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-700 transition-all duration-500 transform scale-95 opacity-0">
+                <div id="resultIcon"
+                    class="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center text-4xl shadow-lg transition-all duration-700">
+                </div>
+                <h3 class="text-3xl font-black mb-2 text-center" id="resultTitle"></h3>
+                <p class="text-gray-500 dark:text-gray-400 text-center mb-8">System Analysis Report</p>
+
+                <div class="space-y-6">
+                    <div>
+                        <div class="flex justify-between items-end mb-2">
+                            <span class="text-sm font-bold text-gray-600 dark:text-gray-300">Confidence Score</span>
+                            <span id="resultConfidence"
+                                class="text-2xl font-black text-primary-600 dark:text-primary-400">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-100 dark:bg-gray-900 rounded-full h-4 relative overflow-hidden">
+                            <div id="confidenceBar"
+                                class="bg-primary-600 h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_20px_rgba(14,165,233,0.5)]"
+                                style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div class="pt-6 border-t border-gray-50 dark:border-gray-700">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div
+                                class="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-xl border border-gray-100 dark:border-gray-700">
+                                <span class="block text-[10px] uppercase text-gray-400 font-bold mb-1">Engine</span>
+                                <span id="resultModel"
+                                    class="text-xs font-bold text-gray-800 dark:text-gray-200 uppercase">---</span>
+                            </div>
+                            <div
+                                class="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-xl border border-gray-100 dark:border-gray-700">
+                                <span class="block text-[10px] uppercase text-gray-400 font-bold mb-1">Status</span>
+                                <span id="resultStatus"
+                                    class="text-xs font-bold text-blue-600 uppercase italic">Verified</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <button onclick="window.location.reload()"
+                        class="w-full py-3 rounded-xl border-2 border-primary-100 dark:border-gray-700 text-primary-600 dark:text-primary-400 font-bold hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all">New
+                        Scan 🔄</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('predictForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const form = e.target;
+        const message = document.getElementById('message').value;
+        const btn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        const spinner = document.getElementById('loadingSpinner');
+        const resultContainer = document.getElementById('resultContainer');
+        const placeholder = document.getElementById('resultPlaceholder');
+
+        btn.disabled = true;
+        btnText.textContent = 'Analysing...';
+        spinner.classList.remove('hidden');
+
+        // Hide result container immediately for new scan
+        resultContainer.classList.add('hidden', 'scale-95', 'opacity-0');
+        placeholder.classList.remove('hidden');
+
+        try {
+            const response = await fetch('/api/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                const isSpam = data.is_spam;
+                const titleEl = document.getElementById('resultTitle');
+                const confEl = document.getElementById('resultConfidence');
+                const barEl = document.getElementById('confidenceBar');
+                const modelEl = document.getElementById('resultModel');
+                const iconEl = document.getElementById('resultIcon');
+
+                if (isSpam) {
+                    titleEl.textContent = 'SPAM ALERT';
+                    titleEl.className = 'text-3xl font-black mb-2 text-center text-red-600 animate-pulse';
+                    barEl.className = 'bg-red-600 h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_20px_rgba(220,38,38,0.5)]';
+                    iconEl.textContent = '⛔';
+                    iconEl.className = 'w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center text-4xl shadow-xl bg-red-50 text-red-600 border-4 border-red-500';
+                } else {
+                    titleEl.textContent = 'SECURE PASS';
+                    titleEl.className = 'text-3xl font-black mb-2 text-center text-green-600';
+                    barEl.className = 'bg-primary-600 h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_20px_rgba(14,165,233,0.5)]';
+                    iconEl.textContent = '🛡️';
+                    iconEl.className = 'w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center text-4xl shadow-xl bg-green-50 text-green-600 border-4 border-green-500';
+                }
+
+                confEl.textContent = data.confidence + '%';
+                modelEl.textContent = data.model_used;
+
+                placeholder.classList.add('hidden');
+                resultContainer.classList.remove('hidden');
+                setTimeout(() => {
+                    resultContainer.classList.remove('scale-95', 'opacity-0');
+                    barEl.style.width = data.confidence + '%';
+                }, 100);
+
+            } else {
+                alert('Error: ' + (data.error || 'Something went wrong'));
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred.');
+        } finally {
+            btn.disabled = false;
+            btnText.textContent = 'Scan Message';
+            spinner.classList.add('hidden');
+        }
+    });
+</script>
+{% endblock %}

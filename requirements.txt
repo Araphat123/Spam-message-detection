@@ -1,0 +1,8 @@
+flask
+nltk
+scikit-learn
+lightgbm
+pandas
+openpyxl
+Flask-Mail
+itsdangerous

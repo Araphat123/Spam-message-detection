@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block header_title %}Scan History{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
+
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+            <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100 italic">📜 Recent Scans</h2>
+            <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Review and manage your past message analyses.</p>
+        </div>
+
+        {% if history|length > 0 %}
+        <form action="{{ url_for('clear_history') }}" method="POST"
+            onsubmit="return confirm('Are you sure you want to clear your entire history? This cannot be undone.');">
+            <button type="submit"
+                class="flex items-center gap-2 px-6 py-2.5 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 font-bold rounded-xl transition-all border border-red-100 dark:border-red-900/50 shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                    </path>
+                </svg>
+                Clear All
+            </button>
+        </form>
+        {% endif %}
+    </div>
+
+    <div
+        class="bg-white dark:bg-gray-800 rounded-3xl shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr
+                        class="bg-gray-50 dark:bg-gray-900/50 text-gray-500 dark:text-gray-400 uppercase text-[10px] tracking-widest border-b border-gray-100 dark:border-gray-700">
+                        <th class="py-5 px-8 font-bold">Timestamp</th>
+                        <th class="py-5 px-8 font-bold">Message Content</th>
+                        <th class="py-5 px-8 font-bold text-center">Engine</th>
+                        <th class="py-5 px-8 font-bold text-right">Detection Result</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50 dark:divide-gray-700/50">
+                    {% for item in history %}
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-all group">
+                        <td class="py-5 px-8 text-xs font-medium text-gray-500 dark:text-gray-500 whitespace-nowrap">
+                            {{ item['timestamp'] }}
+                        </td>
+                        <td class="py-5 px-8">
+                            <div class="max-w-md text-sm text-gray-700 dark:text-gray-300 truncate"
+                                title="{{ item['message_snippet'] }}">
+                                {{ item['message_snippet'] }}
+                            </div>
+                        </td>
+                        <td class="py-5 px-8 text-center text-xs">
+                            <span
+                                class="px-3 py-1 bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 rounded-full font-bold uppercase tracking-tighter">
+                                {{ item['model_used']|upper }}
+                            </span>
+                        </td>
+                        <td class="py-5 px-8 text-right">
+                            {% if item['is_spam'] %}
+                            <div
+                                class="inline-flex items-center gap-1.5 px-4 py-1.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-full text-xs font-black shadow-sm border border-red-100 dark:border-red-900/50">
+                                🚨 SPAM ({{ (item['confidence']*100)|round|int }}%)
+                            </div>
+                            {% else %}
+                            <div
+                                class="inline-flex items-center gap-1.5 px-4 py-1.5 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-full text-xs font-black shadow-sm border border-green-100 dark:border-green-900/50">
+                                ✅ SAFE ({{ (item['confidence']*100)|round|int }}%)
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="py-16 text-center">
+                            <div class="flex flex-col items-center gap-3">
+                                <div
+                                    class="w-16 h-16 rounded-full bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+                                    <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <h3
+                                    class="font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest text-xs">
+                                    No Records Found</h3>
+                                <a href="{{ url_for('predict') }}"
+                                    class="text-primary-600 dark:text-primary-400 font-bold text-sm hover:underline">Start
+                                    Scanning →</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

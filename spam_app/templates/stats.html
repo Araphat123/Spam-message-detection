@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block header_title %}{{ 'System Statistics' if is_admin else 'Your Analytics' }}{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100 italic">📈 Performance Metrics</h2>
+            <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Real-time data on detection accuracy and volume.
+            </p>
+        </div>
+
+        {% if not is_admin %}
+        <form action="{{ url_for('clear_stats') }}" method="POST"
+            onsubmit="return confirm('Are you sure you want to reset your statistics to zero?');">
+            <button type="submit"
+                class="flex items-center gap-2 px-6 py-2.5 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 font-bold rounded-xl transition-all border border-red-100 dark:border-red-900/50 shadow-sm">
+                Reset Data
+            </button>
+        </form>
+        {% endif %}
+    </div>
+
+    {% if is_admin %}
+    <!-- ADMIN VIEW: Table of all users -->
+    <div
+        class="bg-white dark:bg-gray-800 rounded-3xl shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div class="p-6 border-b border-gray-50 dark:border-gray-700">
+            <h3 class="font-bold text-gray-700 dark:text-gray-300 uppercase tracking-widest text-xs">User Management
+                Core</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr
+                        class="bg-gray-50/50 dark:bg-gray-900/50 text-gray-500 dark:text-gray-400 uppercase text-[10px] tracking-widest">
+                        <th class="py-5 px-8 font-bold text-left">User Identity</th>
+                        <th class="py-5 px-8 font-bold text-center">Ham</th>
+                        <th class="py-5 px-8 font-bold text-center">Spam</th>
+                        <th class="py-5 px-8 font-bold text-center">Total Scans</th>
+                        <th class="py-5 px-8 font-bold text-right">Operational Scale</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50 dark:divide-gray-700/50">
+                    {% for user in all_users %}
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-all">
+                        <td class="py-5 px-8">
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center font-black text-sm">
+                                    {{ user.name[0].upper() }}
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold text-gray-800 dark:text-gray-200">{{ user.name }}</p>
+                                    <p class="text-[10px] text-gray-500 font-mono">{{ user.email }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-5 px-8 text-center">
+                            <span class="text-sm font-bold text-green-600 dark:text-green-400">{{ user.ham }}</span>
+                        </td>
+                        <td class="py-5 px-8 text-center">
+                            <span class="text-sm font-bold text-red-600 dark:text-red-400">{{ user.spam }}</span>
+                        </td>
+                        <td class="py-5 px-8 text-center">
+                            <span class="text-sm font-black text-gray-800 dark:text-gray-200">{{ user.total }}</span>
+                        </td>
+                        <td class="py-5 px-8 text-right">
+                            {% if user.email != 'admin@gmail.com' and user.id != session['user_id'] %}
+                            <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST"
+                                onsubmit="return confirm('Are you sure you want to delete this user? This action cannot be undone.');">
+                                <button type="submit"
+                                    class="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
+                                    title="Delete User">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                        </path>
+                                    </svg>
+                                </button>
+                            </form>
+                            {% else %}
+                            <span
+                                class="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-[10px] font-black uppercase text-gray-400 rounded-md italic">Protected</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- NORMAL USER VIEW -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Stats Cards -->
+        <div
+            class="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-gray-700 group hover:-translate-y-1 transition-all duration-300">
+            <div class="flex items-center justify-between mb-6">
+                <span
+                    class="p-4 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-2xl">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                        </path>
+                    </svg>
+                </span>
+                <span class="text-xs font-black text-gray-300 dark:text-gray-600 uppercase tracking-widest">Total</span>
+            </div>
+            <p class="text-5xl font-black text-gray-800 dark:text-gray-100 tracking-tighter">{{ stats.total }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-500 mt-2 font-medium">Accumulated scans</p>
+        </div>
+
+        <div
+            class="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-gray-700 group hover:-translate-y-1 transition-all duration-300">
+            <div class="flex items-center justify-between mb-6">
+                <span class="p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-2xl">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                        </path>
+                    </svg>
+                </span>
+                <span class="text-xs font-black text-gray-300 dark:text-gray-600 uppercase tracking-widest">Spam</span>
+            </div>
+            <p class="text-5xl font-black text-red-600 dark:text-red-500 tracking-tighter">{{ stats.spam }}</p>
+            <p class="text-xs text-red-500/60 dark:text-red-400/60 mt-2 font-medium">Harmful texts blocked</p>
+        </div>
+
+        <div
+            class="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-gray-700 group hover:-translate-y-1 transition-all duration-300">
+            <div class="flex items-center justify-between mb-6">
+                <span class="p-4 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-2xl">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </span>
+                <span class="text-xs font-black text-gray-300 dark:text-gray-600 uppercase tracking-widest">Safe</span>
+            </div>
+            <p class="text-5xl font-black text-green-600 dark:text-green-500 tracking-tighter">{{ stats.ham }}</p>
+            <p class="text-xs text-green-500/60 dark:text-green-400/60 mt-2 font-medium">Clean messages verified</p>
+        </div>
+    </div>
+
+    <!-- Chart Section -->
+    <div
+        class="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-gray-700">
+        <div class="text-center mb-8">
+            <h3 class="text-xl font-bold text-gray-800 dark:text-gray-200 uppercase tracking-widest text-xs">
+                Distribution Intelligence</h3>
+        </div>
+        <div class="relative h-[400px] w-full flex justify-center">
+            <canvas id="statsChart"></canvas>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% if not is_admin %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('statsChart').getContext('2d');
+    const spamCount = Number('{{ stats.spam }}');
+    const hamCount = Number('{{ stats.ham }}');
+
+    function getThemeColors() {
+        const isDark = document.documentElement.classList.contains('dark');
+        return {
+            legendColor: isDark ? '#94a3b8' : '#64748b',
+        };
+    }
+
+    const chart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Potentially Harmful', 'Verified Safe'],
+            datasets: [{
+                data: [spamCount, hamCount],
+                backgroundColor: [
+                    'rgba(239, 68, 68, 0.9)',
+                    'rgba(34, 197, 94, 0.9)'
+                ],
+                borderColor: 'transparent',
+                hoverOffset: 20,
+                borderRadius: 10,
+                spacing: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: getThemeColors().legendColor,
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        padding: 30,
+                        font: { size: 12, weight: 'bold' }
+                    }
+                }
+            }
+        }
+    });
+
+    const observer = new MutationObserver(() => {
+        const isDark = document.documentElement.classList.contains('dark');
+        chart.options.plugins.legend.labels.color = isDark ? '#94a3b8' : '#64748b';
+        chart.update();
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+</script>
+{% endif %}
+{% endblock %}
