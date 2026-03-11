@@ -1,6 +1,9 @@
 from flask import Flask, render_template, request, session, redirect, url_for, flash
 import pickle
+<<<<<<< HEAD
 import joblib
+=======
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
 import re
 import json
 import os
@@ -8,6 +11,7 @@ import nltk
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
+<<<<<<< HEAD
 from nltk.corpus import stopwords
 import secrets
 import datetime
@@ -19,6 +23,13 @@ import string
 from heuristics import calculate_heuristic_score
 import lightgbm as lgb
 from nltk.stem import WordNetLemmatizer
+=======
+from functools import wraps
+from nltk.corpus import stopwords
+import secrets
+import datetime
+from heuristics import calculate_heuristic_score
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
 
 # ==============================
 # NLTK SETUP
@@ -34,12 +45,15 @@ somali_stopwords = {
     "la", "u", "wax", "badan", "ahay", "karo", "mid", "kuma", "wuu", "waxa"
 }
 all_stopwords = english_stopwords.union(somali_stopwords)
+<<<<<<< HEAD
 lemmatizer = WordNetLemmatizer()
 
 try:
     nltk.data.find('corpora/wordnet')
 except LookupError:
     nltk.download('wordnet')
+=======
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
 
 # ==============================
 # FLASK APP
@@ -50,6 +64,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_FILE = os.path.join(BASE_DIR, 'users.db')
 
 # ==============================
+<<<<<<< HEAD
 # MAIL CONFIGURATION
 # ==============================
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -63,6 +78,8 @@ mail = Mail(app)
 serializer = URLSafeTimedSerializer(app.secret_key)
 
 # ==============================
+=======
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
 # DATABASE SETUP
 # ==============================
 def init_db():
@@ -72,6 +89,7 @@ def init_db():
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
                   name TEXT NOT NULL,
                   email TEXT UNIQUE NOT NULL,
+<<<<<<< HEAD
                   password TEXT NOT NULL,
                   email_verified INTEGER DEFAULT 1, 
                   reset_token TEXT)''')
@@ -98,6 +116,9 @@ def init_db():
         c.execute("ALTER TABLE users ADD COLUMN reset_token TEXT")
     except sqlite3.OperationalError:
         pass # Column already exists
+=======
+                  password TEXT NOT NULL)''')
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
 
     c.execute('''CREATE TABLE IF NOT EXISTS user_stats
                  (user_id INTEGER PRIMARY KEY,
@@ -110,12 +131,18 @@ def init_db():
     c.execute("SELECT * FROM users WHERE email = ?", ('admin@gmail.com',))
     if not c.fetchone():
         hashed_pw = generate_password_hash('admin123')
+<<<<<<< HEAD
         c.execute("INSERT INTO users (name, email, password, email_verified) VALUES (?, ?, ?, ?)",
                   ('Admin', 'admin@gmail.com', hashed_pw, 1))
         print("Default admin user created.")
     else:
         # Ensure existing admin is verified
         c.execute("UPDATE users SET email_verified = 1 WHERE email = ?", ('admin@gmail.com',))
+=======
+        c.execute("INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
+                  ('Admin', 'admin@gmail.com', hashed_pw))
+        print("Default admin user created.")
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
     
     c.execute('''CREATE TABLE IF NOT EXISTS api_keys
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -154,6 +181,7 @@ def login_required(f):
 
 
 # ==============================
+<<<<<<< HEAD
 # EMAIL HELPERS
 # ==============================
 def send_async_email(app, msg):
@@ -207,11 +235,27 @@ def load_pickle_model(filename):
 svm_model = load_pickle_model("svm_model.pkl")
 vectorizer = load_pickle_model("vectorizer.pkl")
 model = svm_model
+=======
+# LOAD MODEL & VECTORIZER
+# ==============================
+import lightgbm as lgb
+
+with open(os.path.join(BASE_DIR, "svm_model.pkl"), "rb") as f:
+    model = pickle.load(f)
+
+# Load LightGBM Model
+lgb_model = lgb.Booster(model_file=os.path.join(BASE_DIR, "lightgbm_model.txt"))
+
+with open(os.path.join(BASE_DIR, "vectorizer.pkl"), "rb") as f:
+    vectorizer = pickle.load(f)
+
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
 
 # ==============================
 # CLEAN TEXT (MUST MATCH TRAINING)
 # ==============================
 def clean_text(text):
+<<<<<<< HEAD
     # 1. Convert to lowercase
     text = str(text).lower()
     # 2. Remove punctuation and numbers
@@ -222,10 +266,23 @@ def clean_text(text):
     cleaned_words = [lemmatizer.lemmatize(w) for w in words if w not in all_stopwords]
     # 5. Join words back to text
     return " ".join(cleaned_words)
+=======
+    text = str(text).lower()
+    text = re.sub(r"[^a-zA-Z\s]", "", text)
+    words = text.split()
+    words = [w for w in words if w not in all_stopwords]
+    return " ".join(words)
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
 
 # ==============================
 # STATS STORAGE
 # ==============================
+<<<<<<< HEAD
+=======
+# ==============================
+# STATS STORAGE (DB)
+# ==============================
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
 def update_user_stats(user_id, is_spam):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
@@ -280,8 +337,11 @@ def log_scan_history(user_id, message, is_spam, confidence, model_used):
 # ==============================
 @app.route("/")
 def home():
+<<<<<<< HEAD
     if "user_id" in session:
         return redirect(url_for("predict"))
+=======
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
     return render_template("home.html")
 
 @app.route('/signup', methods=['GET', 'POST'])
@@ -291,6 +351,7 @@ def signup():
         email = request.form['email']
         password = request.form['password']
         
+<<<<<<< HEAD
         print(f"[DEBUG] Signup attempt for email: {email}")
         
         conn = sqlite3.connect(DB_FILE)
@@ -319,6 +380,20 @@ def signup():
             return redirect(url_for('verify_otp'))
         except sqlite3.IntegrityError:
             flash('An error occurred during registration. Please try again.', 'error')
+=======
+        conn = sqlite3.connect(DB_FILE)
+        c = conn.cursor()
+        
+        try:
+            hashed_pw = generate_password_hash(password)
+            c.execute("INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
+                      (name, email, hashed_pw))
+            conn.commit()
+            flash('Account created successfully! Please login.', 'success')
+            return redirect(url_for('login'))
+        except sqlite3.IntegrityError:
+            flash('Email already exists.', 'error')
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
         finally:
             conn.close()
             
@@ -336,6 +411,7 @@ def login():
         user = c.fetchone()
         conn.close()
         
+<<<<<<< HEAD
         if user:
             if check_password_hash(user[3], password):
                 session['user_id'] = user[0]
@@ -364,6 +440,22 @@ def login():
                 return redirect(url_for('verify_otp'))
             
             flash('Email not found. Please sign up.', 'error')
+=======
+        if user and check_password_hash(user[3], password):
+            session['user_id'] = user[0]
+            session['user_name'] = user[1]
+            
+            # Helper to check if admin
+            if email == 'admin@gmail.com':
+                session['is_admin'] = True
+            else:
+                session['is_admin'] = False
+                
+            flash('Logged in successfully!', 'success')
+            return redirect(url_for('predict'))
+        else:
+            flash('Invalid email or password.', 'error')
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
             
     return render_template('login.html')
 
@@ -382,14 +474,26 @@ def predict():
         cleaned_message = clean_text(message)
         vectorized_message = vectorizer.transform([cleaned_message])
 
+<<<<<<< HEAD
         # Default to SVM
         svm_proba = svm_model.predict_proba(vectorized_message)[0]
         svm_classes = list(svm_model.classes_)
+=======
+        # Get model selection from form (default to svm if not specified)
+        selected_model = request.form.get("model", "svm")
+        
+        # --- SVM PREDICTION ---
+        svm_proba = model.predict_proba(vectorized_message)[0]
+        svm_classes = list(model.classes_)
+        
+        # Find index of 'spam' or '1' class for SVM
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
         spam_index = -1
         for idx, cls in enumerate(svm_classes):
             if str(cls).lower() in ['spam', '1']:
                 spam_index = idx
                 break
+<<<<<<< HEAD
         ml_prob = svm_proba[spam_index] if spam_index != -1 else 0.5
             
         # --- HEURISTIC BOOST ---
@@ -409,22 +513,82 @@ def predict():
             
         # Confidence Strenghtener (Aggressive for Spam detection)
         if final_spam_prob > 0.45:
+=======
+        
+        # If safely found spam class, get its probability, else default to 0 (should not happen usually)
+        if spam_index != -1:
+            svm_spam_prob = svm_proba[spam_index]
+        else:
+            # Fallback if classes are weird, though they shouldn't be
+            svm_spam_prob = 0.5 
+
+        # --- LIGHTGBM PREDICTION ---
+        # LightGBM predict returns raw probabilities for the positive class (spam)
+        lgb_spam_prob = lgb_model.predict(vectorized_message)[0]
+
+        # --- DECISION LOGIC ---
+        if selected_model == "ensemble":
+            # Hybrid (Ensemble) Model: Average of SVM and LightGBM
+            ml_prob = (svm_spam_prob + lgb_spam_prob) / 2
+        elif selected_model == "lightgbm":
+            ml_prob = lgb_spam_prob
+        else:
+            # Default to SVM
+            ml_prob = svm_spam_prob
+            
+        # --- HEURISTIC BOOST ---
+        # Calculate rule-based score on RAW message (symbols matter!)
+        heuristic_score = calculate_heuristic_score(message)
+        
+        # --- HEURISTIC BOOST ---
+        # Calculate rule-based score on RAW message (symbols matter!)
+        heuristic_score = calculate_heuristic_score(message)
+        
+        # NEW LOGIC: Trust ML more for strong Ham predictions
+        if ml_prob < 0.2:
+            # If ML is very sure it's Ham, we ignore heuristics unless they are EXTREME (1.0)
+            if heuristic_score >= 0.9:
+                final_spam_prob = (ml_prob * 0.5) + (heuristic_score * 0.5)
+            else:
+                final_spam_prob = ml_prob # Trust ML
+        elif heuristic_score > 0.8:
+            # Strong heuristic evidence of spam
+            final_spam_prob = (ml_prob * 0.3) + (heuristic_score * 0.7)
+        else:
+            # Gray area: mix them
+            final_spam_prob = (ml_prob * 0.8) + (heuristic_score * 0.2)
+            
+        # --- CONFIDENCE STRENGTHENER ---
+        if final_spam_prob > 0.5:
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
             final_spam_prob = min(0.99, final_spam_prob + 0.15)
         else:
             final_spam_prob = max(0.01, final_spam_prob - 0.15)
             
+<<<<<<< HEAD
+=======
+        # Determine result
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
         is_spam = final_spam_prob >= 0.5
         confidence = final_spam_prob if is_spam else (1 - final_spam_prob)
 
         update_user_stats(session['user_id'], is_spam)
+<<<<<<< HEAD
         log_scan_history(session['user_id'], message, is_spam, confidence, 'svm')
+=======
+        log_scan_history(session['user_id'], message, is_spam, confidence, selected_model)
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
 
         return render_template(
             "result.html",
             message=message,
             prediction="Spam 🚨" if is_spam else "Ham ✅",
             confidence=f"{confidence:.2f}",
+<<<<<<< HEAD
             model_used='svm'
+=======
+            model_used=selected_model # Optional: pass back which model was used if needed
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
         )
 
     return render_template("predict.html")
@@ -501,6 +665,7 @@ def clear_history():
     flash("History cleared successfully.", "success")
     return redirect(url_for('history'))
 
+<<<<<<< HEAD
 @app.route('/verify-otp', methods=['GET', 'POST'])
 def verify_otp():
     email = session.get('temp_email')
@@ -597,6 +762,8 @@ def reset_password(token):
         
     return render_template('reset_password.html')
 
+=======
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
 @app.route("/batch", methods=["GET", "POST"])
 @login_required
 def batch():
@@ -681,6 +848,27 @@ def api_predict():
         auth_header = request.headers.get('Authorization')
         if auth_header and auth_header.startswith("Bearer "):
             raw_key = auth_header.split(" ")[1]
+<<<<<<< HEAD
+=======
+            # Key verification is expensive (hashing), so we query all keys for validity?
+            # Better: Since we can't unhash, we rely on the specific key.
+            # Wait, verify logic:
+            # We can't reverse the hash. We have to iterate users? No, that's slow.
+            # Actually, standard practice for hashed keys:
+            # We can store a prefix or ID in the key, e.g. "sk_USERID_RANDOM".
+            # BUT, for now, let's assume we iterate or checking logic.
+            # OPTION B: Store keys as "sk_TOKEN".
+            # To Verify: We need to hash the incoming key and look it up.
+            # Since generate_password_hash uses salt, we CANNOT "lookup" by hash directly if salt is random per hash.
+            # werkzeug.security.check_password_hash requires the stored hash.
+            # So we must iterate all keys? That's bad for performance.
+            # FIX: We will find the key by its exact match if we used SHA256 manually? 
+            # Or simplified: For this project, let's iterate. We assume few keys.
+            
+            # IMPROVEMENT: Use direct hashing (SHA256) for API keys so we can look them up.
+            # Current Implementation uses generate_password_hash which is safe but non-searchable.
+            # Quick fix: Iterate all keys (okay for small scale).
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
             
             valid_user = None
             conn = sqlite3.connect(DB_FILE)
@@ -703,6 +891,10 @@ def api_predict():
 
     data = request.get_json()
     message = data.get("message", "")
+<<<<<<< HEAD
+=======
+    selected_model = data.get("model", "svm")
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
 
     if not message:
         return {"error": "No message provided"}, 400
@@ -710,19 +902,47 @@ def api_predict():
     cleaned_message = clean_text(message)
     vectorized_message = vectorizer.transform([cleaned_message])
 
+<<<<<<< HEAD
     # Default to SVM
     svm_proba = svm_model.predict_proba(vectorized_message)[0]
     svm_classes = list(svm_model.classes_)
+=======
+    # --- SVM PREDICTION ---
+    svm_proba = model.predict_proba(vectorized_message)[0]
+    svm_classes = list(model.classes_)
+    
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
     spam_index = -1
     for idx, cls in enumerate(svm_classes):
         if str(cls).lower() in ['spam', '1']:
             spam_index = idx
             break
+<<<<<<< HEAD
     ml_prob = svm_proba[spam_index] if spam_index != -1 else 0.5
+=======
+    
+    if spam_index != -1:
+        svm_spam_prob = svm_proba[spam_index]
+    else:
+        svm_spam_prob = 0.5 
+
+    # --- LIGHTGBM PREDICTION ---
+    lgb_spam_prob = lgb_model.predict(vectorized_message)[0]
+
+    # --- DECISION LOGIC ---
+    # --- DECISION LOGIC ---
+    if selected_model == "ensemble":
+        ml_prob = (svm_spam_prob + lgb_spam_prob) / 2
+    elif selected_model == "lightgbm":
+        ml_prob = lgb_spam_prob
+    else:
+        ml_prob = svm_spam_prob
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
         
     # --- HEURISTIC BOOST ---
     heuristic_score = calculate_heuristic_score(message)
     
+<<<<<<< HEAD
     # Mixed logic: More sensitive to Somali/Pattern heuristics
     if ml_prob < 0.1 and heuristic_score < 0.6:
         final_spam_prob = ml_prob # Trust EXTREMELY strong Ham ML
@@ -739,18 +959,52 @@ def api_predict():
     if final_spam_prob > 0.45:
         final_spam_prob = min(0.99, final_spam_prob + 0.15)
     else:
+=======
+    # --- HEURISTIC BOOST ---
+    heuristic_score = calculate_heuristic_score(message)
+    
+    # NEW LOGIC: Trust ML more for strong Ham predictions
+    if ml_prob < 0.2:
+        # If ML is very sure it's Ham, we ignore heuristics unless they are EXTREME (1.0)
+        if heuristic_score >= 0.9:
+            final_spam_prob = (ml_prob * 0.5) + (heuristic_score * 0.5)
+        else:
+            final_spam_prob = ml_prob # Trust ML
+    elif heuristic_score > 0.8:
+        # Strong heuristic evidence of spam
+        final_spam_prob = (ml_prob * 0.3) + (heuristic_score * 0.7)
+    else:
+        # Gray area: mix them
+        final_spam_prob = (ml_prob * 0.8) + (heuristic_score * 0.2)
+
+    # --- CONFIDENCE STRENGTHENER ---
+    # Push the probability towards the extremes (0 or 1) to give the user "Stronger" answers.
+    if final_spam_prob > 0.5:
+        # Boost Spam Confidence
+        final_spam_prob = min(0.99, final_spam_prob + 0.15)
+    else:
+        # Boost Ham Confidence (reduce spam prob)
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
         final_spam_prob = max(0.01, final_spam_prob - 0.15)
 
     is_spam = final_spam_prob >= 0.5
     confidence = final_spam_prob if is_spam else (1 - final_spam_prob)
 
     update_user_stats(user_id, is_spam)
+<<<<<<< HEAD
     log_scan_history(user_id, message, is_spam, confidence, 'svm')
+=======
+    log_scan_history(user_id, message, is_spam, confidence, selected_model)
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
 
     return {
         "is_spam": bool(is_spam),
         "confidence": round(confidence * 100, 2), # Return as percentage
+<<<<<<< HEAD
         "model_used": 'svm'
+=======
+        "model_used": selected_model
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
     }
 
 @app.route("/stats")

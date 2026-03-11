@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 
+<<<<<<< HEAD
 {% block header_title %}Predictions{% endblock %}
 
 {% block content %}
@@ -113,6 +114,103 @@
                 </div>
             </div>
         </div>
+=======
+{% block content %}
+<div class="flex items-center justify-center min-h-[80vh] p-4">
+    <div
+        class="w-full max-w-2xl bg-white dark:bg-gray-800/50 backdrop-blur-md p-8 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700/50 transition-colors duration-200">
+
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h2
+                class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400">
+                Analyze Message
+            </h2>
+            <p class="text-gray-600 dark:text-gray-400 mt-2">Paste your text below to detect if it's Spam or Ham</p>
+        </div>
+
+        <!-- Form -->
+        <form id="predictForm" class="space-y-6">
+            <div class="relative group">
+                <div
+                    class="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200">
+                </div>
+                <textarea id="message" name="message" rows="6"
+                    class="relative w-full bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-700 rounded-lg p-4 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition resize-none placeholder-gray-400 dark:placeholder-gray-600 text-lg shadow-inner"
+                    placeholder="e.g., Win a free iPhone now! Click here..." required></textarea>
+            </div>
+
+            <div class="space-y-3">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select Model</label>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- SVM -->
+                    <label class="cursor-pointer group">
+                        <input type="radio" name="model" value="svm" class="peer sr-only" checked>
+                        <div
+                            class="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 peer-checked:border-blue-500 dark:peer-checked:border-blue-400 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/20 transition-all duration-200 text-center h-full flex flex-col justify-center shadow-sm hover:shadow-md">
+                            <span
+                                class="block font-bold text-gray-800 dark:text-gray-100 mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">SVM</span>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">Support Vector Machine</span>
+                        </div>
+                    </label>
+
+                    <!-- LightGBM -->
+                    <label class="cursor-pointer group">
+                        <input type="radio" name="model" value="lightgbm" class="peer sr-only">
+                        <div
+                            class="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 peer-checked:border-purple-500 dark:peer-checked:border-purple-400 peer-checked:bg-purple-50 dark:peer-checked:bg-purple-900/20 transition-all duration-200 text-center h-full flex flex-col justify-center shadow-sm hover:shadow-md">
+                            <span
+                                class="block font-bold text-gray-800 dark:text-gray-100 mb-1 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">LightGBM</span>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">Gradient Boosting</span>
+                        </div>
+                    </label>
+
+                    <!-- Hybrid -->
+                    <label class="cursor-pointer group">
+                        <input type="radio" name="model" value="ensemble" class="peer sr-only">
+                        <div
+                            class="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 peer-checked:border-indigo-500 dark:peer-checked:border-indigo-400 peer-checked:bg-indigo-50 dark:peer-checked:bg-indigo-900/20 transition-all duration-200 text-center h-full flex flex-col justify-center shadow-sm hover:shadow-md relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-8 h-8 flex items-center justify-center">
+                                <span
+                                    class="absolute transform rotate-45 bg-indigo-500 text-[8px] text-white font-bold py-0.5 px-3 right-[-10px] top-[2px] shadow-sm">NEW</span>
+                            </div>
+                            <span
+                                class="block font-bold text-gray-800 dark:text-gray-100 mb-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">Hybrid
+                                Model</span>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">Ensemble Power</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn"
+                class="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-xl transition transform hover:scale-[1.01] shadow-lg flex items-center justify-center gap-2 text-lg disabled:opacity-70 disabled:cursor-not-allowed">
+                <span id="btnText">Run Detection</span>
+                <span id="btnIcon" class="text-xl">🔍</span>
+                <svg id="loadingSpinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden"
+                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                    </path>
+                </svg>
+            </button>
+        </form>
+
+        <!-- Result Container -->
+        <div id="resultContainer"
+            class="hidden mt-8 p-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 text-center transition-all duration-500 transform scale-95 opacity-0">
+            <h3 class="text-2xl font-bold mb-2" id="resultTitle"></h3>
+            <p class="text-gray-600 dark:text-gray-400 mb-4">Confidence: <span id="resultConfidence"
+                    class="font-bold"></span>%</p>
+            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-4">
+                <div id="confidenceBar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-1000"
+                    style="width: 0%"></div>
+            </div>
+            <p class="text-xs text-gray-500 dark:text-gray-500">Model used: <span id="resultModel"></span></p>
+        </div>
+
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
     </div>
 </div>
 
@@ -122,6 +220,7 @@
 
         const form = e.target;
         const message = document.getElementById('message').value;
+<<<<<<< HEAD
         const btn = document.getElementById('submitBtn');
         const btnText = document.getElementById('btnText');
         const spinner = document.getElementById('loadingSpinner');
@@ -135,22 +234,49 @@
         // Hide result container immediately for new scan
         resultContainer.classList.add('hidden', 'scale-95', 'opacity-0');
         placeholder.classList.remove('hidden');
+=======
+        const model = document.querySelector('input[name="model"]:checked').value;
+        const btn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        const btnIcon = document.getElementById('btnIcon');
+        const spinner = document.getElementById('loadingSpinner');
+        const resultContainer = document.getElementById('resultContainer');
+
+        // Loading State
+        btn.disabled = true;
+        btnText.textContent = 'Analyzing...';
+        btnIcon.classList.add('hidden');
+        spinner.classList.remove('hidden');
+        resultContainer.classList.add('hidden', 'scale-95', 'opacity-0');
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
 
         try {
             const response = await fetch('/api/predict', {
                 method: 'POST',
+<<<<<<< HEAD
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message })
+=======
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message, model })
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
             });
 
             const data = await response.json();
 
             if (response.ok) {
+<<<<<<< HEAD
+=======
+                // Update Result
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
                 const isSpam = data.is_spam;
                 const titleEl = document.getElementById('resultTitle');
                 const confEl = document.getElementById('resultConfidence');
                 const barEl = document.getElementById('confidenceBar');
                 const modelEl = document.getElementById('resultModel');
+<<<<<<< HEAD
                 const iconEl = document.getElementById('resultIcon');
 
                 if (isSpam) {
@@ -176,16 +302,51 @@
                     resultContainer.classList.remove('scale-95', 'opacity-0');
                     barEl.style.width = data.confidence + '%';
                 }, 100);
+=======
+
+                if (isSpam) {
+                    titleEl.textContent = 'Spam Detected 🚨';
+                    titleEl.className = 'text-2xl font-bold mb-2 text-red-600 dark:text-red-500';
+                    barEl.className = 'bg-red-600 dark:bg-red-500 h-2.5 rounded-full transition-all duration-1000';
+                } else {
+                    titleEl.textContent = 'Clean Message ✅';
+                    titleEl.className = 'text-2xl font-bold mb-2 text-green-600 dark:text-green-500';
+                    barEl.className = 'bg-green-600 dark:bg-green-500 h-2.5 rounded-full transition-all duration-1000';
+                }
+
+                confEl.textContent = data.confidence;
+                modelEl.textContent = data.model_used;
+
+                // Show Result
+                resultContainer.classList.remove('hidden');
+                // Small delay to allow transition
+                setTimeout(() => {
+                    resultContainer.classList.remove('scale-95', 'opacity-0');
+                    barEl.style.width = data.confidence + '%';
+                }, 50);
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
 
             } else {
                 alert('Error: ' + (data.error || 'Something went wrong'));
             }
+<<<<<<< HEAD
         } catch (error) {
             console.error('Error:', error);
             alert('An error occurred.');
         } finally {
             btn.disabled = false;
             btnText.textContent = 'Scan Message';
+=======
+
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred during prediction.');
+        } finally {
+            // Reset Button
+            btn.disabled = false;
+            btnText.textContent = 'Run Detection';
+            btnIcon.classList.remove('hidden');
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
             spinner.classList.add('hidden');
         }
     });

@@ -4,5 +4,8 @@ scikit-learn
 lightgbm
 pandas
 openpyxl
+<<<<<<< HEAD
 Flask-Mail
 itsdangerous
+=======
+>>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
