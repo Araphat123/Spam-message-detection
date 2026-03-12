@@ -16,14 +16,10 @@ def calculate_heuristic_score(text):
         'cash': 0.2, 'money': 0.2, 'investment': 0.2, 'crypto': 0.3,
         'bitcoin': 0.3, 'bank account': 0.3, 'suspended': 0.3,
         'unusual activity': 0.2, 'confirm your': 0.2, 'free': 0.2,
-<<<<<<< HEAD
         'offer': 0.1, 'deal': 0.1, 'click here': 0.3, 'subscribe': 0.1,
         # Somali Keywords
         'guuleyso': 0.4, 'lacag': 0.3, 'abaalmarin': 0.4, 'nasiib': 0.3,
         'degdeg': 0.3, 'hadiyad': 0.3, 'jawaab': 0.2, 'fariin': 0.1
-=======
-        'offer': 0.1, 'deal': 0.1, 'click here': 0.3, 'subscribe': 0.1
->>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
     }
     
     for word, weight in keywords.items():
@@ -55,14 +51,10 @@ def calculate_heuristic_score(text):
         'mom': 0.2, 'dad': 0.2, 'home': 0.1, 'meeting': 0.2, 'assignment': 0.2,
         'class': 0.1, 'project': 0.1, 'love': 0.1, 'sorry': 0.1, 'later': 0.1,
         'ok': 0.1, 'okay': 0.1, 'thanks': 0.1, 'hey': 0.05, 'today': 0.05,
-<<<<<<< HEAD
         'tomorrow': 0.05, 'work': 0.1, 'report': 0.1, 'presentation': 0.1,
         # Somali Safe Keywords
         'mahadsanid': 0.2, 'haye': 0.1, 'waan': 0.1, 'maanta': 0.1,
         'berri': 0.1, 'shaqo': 0.1, 'reer': 0.1
-=======
-        'tomorrow': 0.05, 'work': 0.1, 'report': 0.1, 'presentation': 0.1
->>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
     }
     
     for word, reduction in safe_keywords.items():
@@ -78,14 +70,10 @@ def calculate_heuristic_score(text):
         'call me when': 0.3,
         'let me know': 0.2,
         'how are you': 0.2,
-<<<<<<< HEAD
         'see you': 0.2,
         # Somali Safe Phrases
         'iska warran': 0.4,
         'is-arki doonaa': 0.3
-=======
-        'see you': 0.2
->>>>>>> 50aa913d08abbd462083c549b0a25b36d6e6843b
     }
     
     for phrase, reduction in safe_phrases.items():
