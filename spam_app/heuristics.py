@@ -54,7 +54,8 @@ def calculate_heuristic_score(text):
         'tomorrow': 0.05, 'work': 0.1, 'report': 0.1, 'presentation': 0.1,
         # Somali Safe Keywords
         'mahadsanid': 0.2, 'haye': 0.1, 'waan': 0.1, 'maanta': 0.1,
-        'berri': 0.1, 'shaqo': 0.1, 'reer': 0.1
+        'berri': 0.1, 'shaqo': 0.1, 'reer': 0.1, 'jaamacadda': 0.4,
+        'aroos': 0.3, 'qalin-jabinta': 0.3, 'hambalyo': 0.1
     }
     
     for word, reduction in safe_keywords.items():

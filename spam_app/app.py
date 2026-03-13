@@ -407,11 +407,11 @@ def predict():
         else:
             final_spam_prob = (ml_prob * 0.8) + (heuristic_score * 0.2)
             
-        # Confidence Strenghtener (Aggressive for Spam detection)
-        if final_spam_prob > 0.45:
-            final_spam_prob = min(0.99, final_spam_prob + 0.15)
-        else:
-            final_spam_prob = max(0.01, final_spam_prob - 0.15)
+        # Confidence Strenghtener (Slightly less aggressive for borderline cases)
+        if final_spam_prob > 0.55:
+            final_spam_prob = min(0.99, final_spam_prob + 0.12)
+        elif final_spam_prob < 0.45:
+            final_spam_prob = max(0.01, final_spam_prob - 0.12)
             
         is_spam = final_spam_prob >= 0.5
         confidence = final_spam_prob if is_spam else (1 - final_spam_prob)
@@ -735,11 +735,11 @@ def api_predict():
     else:
         final_spam_prob = (ml_prob * 0.8) + (heuristic_score * 0.2)
 
-    # --- CONFIDENCE STRENGTHENER (Aggressive for Spam detection) ---
-    if final_spam_prob > 0.45:
-        final_spam_prob = min(0.99, final_spam_prob + 0.15)
-    else:
-        final_spam_prob = max(0.01, final_spam_prob - 0.15)
+    # --- CONFIDENCE STRENGTHENER (Slightly less aggressive for borderline cases) ---
+    if final_spam_prob > 0.55:
+        final_spam_prob = min(0.99, final_spam_prob + 0.12)
+    elif final_spam_prob < 0.45:
+        final_spam_prob = max(0.01, final_spam_prob - 0.12)
 
     is_spam = final_spam_prob >= 0.5
     confidence = final_spam_prob if is_spam else (1 - final_spam_prob)
