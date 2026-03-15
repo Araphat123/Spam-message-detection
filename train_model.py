@@ -66,8 +66,16 @@ X_train, X_test, y_train, y_test = train_test_split(df['cleaned_text'], df['labe
 vectorizer = TfidfVectorizer(ngram_range=(1, 2), max_features=6000)
 X_train_tfidf = vectorizer.fit_transform(X_train)
 
+# --- SMOTE: Handling Class Imbalance ---
+print("Applying SMOTE to balance the dataset...")
+from imblearn.over_sampling import SMOTE
+smote = SMOTE(random_state=42)
+X_train_tfidf, y_train = smote.fit_resample(X_train_tfidf, y_train)
+print(f"Balanced Dataset - Ham: {sum(y_train == 'ham')}, Spam: {sum(y_train == 'spam')}")
+# ---------------------------------------
+
 print("Training SVM...")
-svm_model = SVC(kernel='linear', probability=True)
+svm_model = SVC(kernel='linear', probability=True, class_weight='balanced')
 svm_model.fit(X_train_tfidf, y_train)
 
 # SVM Evaluation
