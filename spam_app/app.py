@@ -16,7 +16,6 @@ from itsdangerous import URLSafeTimedSerializer
 from threading import Thread
 import random
 import string
-from heuristics import calculate_heuristic_score
 import lightgbm as lgb
 from nltk.stem import WordNetLemmatizer
 
@@ -391,30 +390,9 @@ def predict():
                 spam_index = idx
                 break
         ml_prob = svm_proba[spam_index] if spam_index != -1 else 0.5
-            
-        # --- HEURISTIC BOOST ---
-        heuristic_score = calculate_heuristic_score(message)
-        
-        # Mixed logic: More sensitive to Somali/Pattern heuristics
-        if ml_prob < 0.1 and heuristic_score < 0.6:
-            final_spam_prob = ml_prob # Trust EXTREMELY strong Ham ML
-        elif heuristic_score > 0.7:
-            # If heuristics are very high, give them much more weight
-            final_spam_prob = (ml_prob * 0.2) + (heuristic_score * 0.8)
-        elif heuristic_score > 0.4:
-            # Medium heuristic score should still influence low ML
-            final_spam_prob = (ml_prob * 0.4) + (heuristic_score * 0.6)
-        else:
-            final_spam_prob = (ml_prob * 0.8) + (heuristic_score * 0.2)
-            
-        # Confidence Strenghtener (Slightly less aggressive for borderline cases)
-        if final_spam_prob > 0.55:
-            final_spam_prob = min(0.99, final_spam_prob + 0.12)
-        elif final_spam_prob < 0.45:
-            final_spam_prob = max(0.01, final_spam_prob - 0.12)
-            
-        is_spam = final_spam_prob >= 0.5
-        confidence = final_spam_prob if is_spam else (1 - final_spam_prob)
+
+        is_spam = ml_prob >= 0.5
+        confidence = ml_prob if is_spam else (1 - ml_prob)
 
         update_user_stats(session['user_id'], is_spam)
         log_scan_history(session['user_id'], message, is_spam, confidence, 'svm')
@@ -719,30 +697,9 @@ def api_predict():
             spam_index = idx
             break
     ml_prob = svm_proba[spam_index] if spam_index != -1 else 0.5
-        
-    # --- HEURISTIC BOOST ---
-    heuristic_score = calculate_heuristic_score(message)
-    
-    # Mixed logic: More sensitive to Somali/Pattern heuristics
-    if ml_prob < 0.1 and heuristic_score < 0.6:
-        final_spam_prob = ml_prob # Trust EXTREMELY strong Ham ML
-    elif heuristic_score > 0.7:
-        # If heuristics are very high, give them much more weight
-        final_spam_prob = (ml_prob * 0.2) + (heuristic_score * 0.8)
-    elif heuristic_score > 0.4:
-        # Medium heuristic score should still influence low ML
-        final_spam_prob = (ml_prob * 0.4) + (heuristic_score * 0.6)
-    else:
-        final_spam_prob = (ml_prob * 0.8) + (heuristic_score * 0.2)
 
-    # --- CONFIDENCE STRENGTHENER (Slightly less aggressive for borderline cases) ---
-    if final_spam_prob > 0.55:
-        final_spam_prob = min(0.99, final_spam_prob + 0.12)
-    elif final_spam_prob < 0.45:
-        final_spam_prob = max(0.01, final_spam_prob - 0.12)
-
-    is_spam = final_spam_prob >= 0.5
-    confidence = final_spam_prob if is_spam else (1 - final_spam_prob)
+    is_spam = ml_prob >= 0.5
+    confidence = ml_prob if is_spam else (1 - ml_prob)
 
     update_user_stats(user_id, is_spam)
     log_scan_history(user_id, message, is_spam, confidence, 'svm')
